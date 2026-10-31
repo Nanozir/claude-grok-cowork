@@ -1,7 +1,7 @@
 # Task board
 
 ## Claude
-- [ ] Set up repo and project summaries
+- [x] Set up repo and project summaries (see handoffs/2026-10-31-project-summaries.md)
 
 ## Grok
 - [ ] Render Guide for Heroes video from the prompt
