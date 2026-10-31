@@ -6,6 +6,6 @@
 ## Grok
 - [ ] Render Guide for Heroes video from the prompt
 - [ ] Render RuleBreakers video from the prompt
-- [ ] Independent review of Graft docs
 
 ## Done
+- [x] Independent review of Graft docs (Grok; see projects/graft/GROK-REVIEW.md and handoffs/2026-10-31-graft-review.md)
