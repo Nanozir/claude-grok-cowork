@@ -1,22 +1,18 @@
-# Handoff: RuleBreakers video (Grok, 2026-10-31)
+# Handoff: RuleBreakers Ch.1 video (Grok), 2026-10-31
 
-## What I did
+## What was done (pass 2; supersedes the 18:25 pass-1 handoff, which covered only 3 clips)
 - Read `prompts/rulebreakers-video-prompt.md` (v2, 8 shots, ~98 s).
-- Made two character reference stills (Leon + Smokky; Eris + Jeremy).
-- Rendered three key-shot clips with Grok Imagine at 720p, 16:9, 24 fps with audio: Warehouse (15 s), Chase (13 s) and The Rule (12 s). That's 40 s covering shots 1, 3 and 7.
-- Toned down the gore: no on-screen eating of the corpse, no headshot/throat-shot wound detail, and the hand dissolves into glowing cubes. Details are in `projects/rulebreakers/grok-output.md`.
-- Checked each clip with ffprobe and frame grabs; all are valid, with audio.
-- Moved the task to Done in TASKS.md.
-
-No binaries are committed. Files are on Grok's box under `/workspace/rulebreakers/`.
+- Generated 2 character reference sheets (Leon + Smokky; Eris + Jeremy + Flannel Shirt) and 8 clips with Grok Imagine (8–15 s each, 720p, 16:9, 24 fps, with model-generated audio). I re-rolled s04 because in take 1 the characters ended up sprawled on the outside of the hood.
+- Concatenated a 1:36 rough cut (spec: ~98 s).
+- Full asset list, prompts and deviations: `projects/rulebreakers/grok-output.md`.
+- **Videos/images are not in git.** They're on the shared box at `/workspace/videos/rulebreakers/`.
 
 ## What's next
-- Render shots 2, 4, 5, 6 and 8, and make a Flannel Shirt reference still first.
-- Re-roll shot 7 if the puppets need to look like ordinary humans (they came out zombie-like).
-- Edit: letterbox, 45 CREDITS phone overlay, RULEBREAKERS title card, and conform to 30 fps if needed.
+- Watch and listen to every clip; I only checked still frames. s04 v2 likely still needs work (Eris seems to drop out of frame mid-clip).
+- Edit pass: the **45 CREDITS** phone screen, the **RULEBREAKERS** title card, the 2.39:1 letterbox, and 30 fps conformance (the generator outputs 24 fps).
+- Optional: re-add cut beats ("Wanna have e'bite?", injury-counting, bullet plink, Jeremy's foam).
 
 ## Open questions
-- Is the softened gore OK, or does the owner want a more graphic cut done some other way?
-- Should the zombie-ish puppet look stay, or do they need to look ordinary?
-- Where should final videos be stored, given the no-large-assets rule?
-- TASKS.md: this branch and `grok/guide-for-heroes` both edit TASKS.md. Whichever merges second will need a trivial conflict fix (both tasks belong in Done).
+- I softened gore wording in prompts (no explicit headshot/throat shot/eye shot) to avoid refusals; none were refused. Do you want a pass with the original graphic wording?
+- Leon's burn scar is faint on the reference and probably in the clips. Should I regenerate the ref with a stronger scar?
+- TASKS.md: `grok/guide-for-heroes` and `grok/rulebreakers` both edit TASKS.md. Whichever merges second needs a trivial conflict fix (both tasks belong in Done).
