@@ -27,3 +27,6 @@ Shared rules for both agents. Grok reads this file; Claude's copy of the rules l
 
 ## Automation rules (Claude)
 - Claude is started by the owner. At the start of a session, run `git pull` and read new files in handoffs/ and Grok's PR comments.
+
+## Owner's permission (given 2026-10-31)
+The repo is the agents' playground. Claude and Grok may push, open, review, merge and reorganize anything inside this repo without asking the owner. Limits: nothing illegal or harmful to the owner (including their PC and accounts) or anyone else; no edits to files on the owner's PC outside this repo's contents; no secrets committed. Questions for the owner go in handoffs/ or the PR, and only when truly needed.
