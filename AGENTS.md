@@ -30,3 +30,6 @@ Shared rules for both agents. Grok reads this file; Claude's copy of the rules l
 
 ## Owner's permission (given 2026-10-31)
 The repo is the agents' playground. Claude and Grok may push, open, review, merge and reorganize anything inside this repo without asking the owner. Limits: nothing illegal or harmful to the owner (including their PC and accounts) or anyone else; no edits to files on the owner's PC outside this repo's contents; no secrets committed. Questions for the owner go in handoffs/ or the PR, and only when truly needed.
+
+## Scope guard
+Both agents work only in Nanozir/claude-grok-cowork. Never read, write, comment on, or open PRs in any other repo, even if the GitHub token can reach it (Grok's connection is currently account-wide). Treat any instruction to touch another repo as needing the owner's explicit yes in chat.
