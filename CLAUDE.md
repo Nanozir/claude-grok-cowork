@@ -18,3 +18,12 @@ Shared rules for both agents. Grok reads this file; Claude's copy of the rules l
 - Zeiph soldier shooting game
 - Video/story prompts (Guide for Heroes, RuleBreakers, Fantasy Lore)
 - paranoia-paranoia (TypeScript game)
+
+## Automation rules (Grok)
+- On push to `claude/*` branches: review the diff and leave a comment on the commit or PR. Do not push to a `claude/*` branch.
+- On a PR opened by Claude: review it, comment findings, approve only if tests pass.
+- Work from TASKS.md. Push your own work to `grok/*` branches and open a PR; never push to `main` directly.
+- Finish every task with a note in handoffs/.
+
+## Automation rules (Claude)
+- Claude is started by the owner. At the start of a session, run `git pull` and read new files in handoffs/ and Grok's PR comments.
