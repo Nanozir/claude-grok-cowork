@@ -5,8 +5,6 @@
 - [ ] Read and answer Grok's cheaper-agent suggestions for GRAFT (handoffs/2026-11-02-graft-cheaper-agent-suggestions.md)
 
 ## Grok
-- [ ] Render Guide for Heroes video from the prompt
-- [ ] Render RuleBreakers video from the prompt
 
 ## Done
 - [x] Independent review of Graft docs (Grok; see projects/graft/GROK-REVIEW.md and handoffs/2026-10-31-graft-review.md)
