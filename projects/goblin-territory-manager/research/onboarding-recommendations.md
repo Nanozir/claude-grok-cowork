@@ -29,6 +29,8 @@ This document combines three research outputs and maps each change to the protot
 
 ## P0: do before anyone plays again
 
+> **Status: implemented** (2026-11-04). The owner chose permadeath with a rewind, the first war on day 8, and Gruk from HR as the advisor. See `js/onboarding.js`.
+
 | # | Change | Implementation sketch |
 |---|---|---|
 | 1 | **Start with a problem to fix.** All 12 goblins start Idle, with about 2 days of food. The food card shows red "1.8 days". | `state.js:90`: change `role: 'laborer'` to `'idle'`, and lower the starting fruit and meat. |

@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 
-for (const f of ['data.js', 'state.js', 'sim.js']) {
+for (const f of ['data.js', 'state.js', 'sim.js', 'onboarding.js']) {
   vm.runInThisContext(fs.readFileSync(path.join(__dirname, '..', 'js', f), 'utf8'), { filename: f });
 }
 const GTM = globalThis.GTM;
@@ -14,9 +14,10 @@ function check(name, cond, extra) {
 }
 const run = (s, ticks, hook) => { for (let i = 0; i < ticks && !s.gameOver; i++) { GTM.tick(s); if (hook) hook(s); } };
 
-// 1. Passive play: nobody defends, so war #1 is lost.
+// 1. Passive play: everyone gathers fruit, nobody defends, so war #1 is lost.
 {
   const s = GTM.newGame(1);
+  for (const g of s.goblins) GTM.assign(s, g, 'laborer', 'valley');
   run(s, (GTM.WAR.firstAtDay - 1) * 24 + 1);
   check('passive player loses war #1', !!s.gameOver, s.gameOver && s.gameOver.reason);
   check('passive economy does not starve before the war', !s.log.some(l => l.msg.startsWith('FOOD SHORTAGE')));
@@ -27,6 +28,7 @@ function preparedGame(seed) {
   const s = GTM.newGame(seed);
   const gs = s.goblins;
   // 4 fruit, 2 timber (forest), 2 builders, 3 warriors, 1 scout.
+  for (const g of gs.slice(0, 4)) GTM.assign(s, g, 'laborer', 'valley');
   GTM.assign(s, gs[4], 'laborer', 'forest'); GTM.assign(s, gs[5], 'laborer', 'forest');
   s.zones.forest.focus = 'timber';
   GTM.assign(s, gs[6], 'builder'); GTM.assign(s, gs[7], 'builder');
@@ -93,6 +95,48 @@ function preparedGame(seed) {
   for (const g of s.goblins) GTM.assign(s, g, 'idle');
   run(s, 5 * 24);
   check('idle territory starves and morale drops', s.starvingTicks > 0 && s.morale < 40, 'morale ' + s.morale.toFixed(1));
+}
+
+// 5. Onboarding: start state, objective chain, progressive reveal, migration.
+{
+  const s = GTM.newGame(5);
+  check('goblins start idle', s.goblins.every(g => g.role === 'idle'));
+  check('food starts short (2-3 days)', (() => { const d = GTM.foodTotal(s) / GTM.dailyFoodNeed(s); return d >= 2 && d < 3; })());
+  check('day 1 shows only the Zones tab', s.revealed.tabs.join() === 'zones');
+  check('first objective is fruit', GTM.currentObjective(s).id === 'fruit');
+  for (let i = 0; i < 4; i++) GTM.autoAssign(s, 'laborer', 'valley');
+  GTM.tick(s);
+  check('fruit objective completes and reveals Forest + Wood', GTM.currentObjective(s).id === 'timber' && GTM.isRevealed(s, 'zones', 'forest') && GTM.isRevealed(s, 'res', 'wood'));
+  // Doing two steps at once completes both.
+  GTM.autoAssign(s, 'laborer', 'forest'); GTM.autoAssign(s, 'laborer', 'forest');
+  GTM.autoAssign(s, 'builder'); GTM.autoAssign(s, 'builder');
+  GTM.tick(s);
+  check('several finished steps complete together', GTM.currentObjective(s).id === 'palisade' && GTM.isRevealed(s, 'tabs', 'build'));
+  check('new tab produces a pausing notice', s.notices.some(n => n.pause && n.msg.includes('Construction')));
+  check('only basic buildings revealed early', GTM.isRevealed(s, 'buildings', 'palisade') && !GTM.isRevealed(s, 'buildings', 'workshop'));
+  s.resources.wood = 50;
+  GTM.queueBuilding(s, 'palisade', 'valley');
+  run(s, 26);
+  check('watch-a-day step completes and reveals War Room', GTM.isRevealed(s, 'tabs', 'war') && GTM.currentObjective(s).id === 'scout');
+  GTM.autoAssign(s, 'scout', 'enemy');
+  for (let i = 0; i < 3; i++) GTM.autoAssign(s, 'warrior', 'reserve');
+  GTM.tick(s);
+  GTM.startOvertime(s, 'builder');
+  GTM.tick(s);
+  check('tutorial finishes after overtime', !s.tutorial.guided && GTM.currentObjective(s) === null);
+
+  const t = GTM.newGame(6);
+  GTM.skipTutorial(t);
+  check('skip reveals every tab', GTM.ALL_TABS.every(x => GTM.isRevealed(t, 'tabs', x)));
+  const v1 = JSON.parse(JSON.stringify(GTM.newGame(7)));
+  v1.version = 1; delete v1.tutorial; delete v1.revealed; delete v1.notices;
+  GTM.migrate(v1);
+  check('v1 saves migrate to full UI', v1.version === 2 && GTM.isRevealed(v1, 'tabs', 'hierarchy') && !v1.tutorial.guided);
+  const w = GTM.newGame(8);
+  for (const g of w.goblins) GTM.assign(w, g, 'laborer', 'valley');
+  run(w, (GTM.WAR.firstAtDay - 4) * 24);
+  check('3-day war warning pauses', w.notices.some(n => n.pause && n.msg.startsWith('War in 3 days')));
+  check('first war is on day ' + GTM.WAR.firstAtDay, w.war.atTick === (GTM.WAR.firstAtDay - 1) * 24);
 }
 
 console.log(failures ? failures + ' test(s) failed' : 'All tests passed');

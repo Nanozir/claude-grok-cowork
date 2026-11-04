@@ -25,43 +25,74 @@ const opt = (value, label, sel) => `<option value="${esc(value)}" ${value === se
 GTM.esc = esc;
 
 // ---------- Top bar & resource strip ----------
+const shown = (s, kind, id) => GTM.isRevealed(s, kind, id);
+
 GTM.renderTop = function (s) {
   const w = s.war;
   const left = w ? w.atTick - s.tick : 0;
   const days = Math.floor(left / 24), hrs = left % 24;
-  const speeds = [[0, 'II'], [1, '1x'], [2, '2x'], [5, '5x'], [10, '10x']];
+  const speeds = [[0, 'II'], [1, '1x'], [2, '2x'], [4, '4x']];
+  if (shown(s, 'flags', 'speed10')) speeds.push([10, '10x']);
   return `
-    <div class="title">Goblin Territory Manager <small>Lord's Dashboard - Level ${s.level}</small></div>
+    <div class="title">Goblin Territory Manager <small>Level ${s.level}</small></div>
     <div>${GTM.fmtTime(s.tick)}</div>
-    <div class="speed">${speeds.map(([v, l]) => `<button data-action="speed" data-v="${v}" class="${(v === 0 ? s.paused : !s.paused && s.speed === v) ? 'on' : ''}">${l}</button>`).join('')}</div>
-    ${w ? `<div class="warclock ${left <= 24 ? 'urgent' : ''}">Territory War #${w.number} in ${days}d ${hrs}h</div>` : ''}
+    <div class="speed">${speeds.map(([v, l]) => `<button data-action="speed" data-v="${v}" class="${(v === 0 ? s.paused : !s.paused && s.speed === v) ? 'on' : ''}" title="${v === 0 ? 'Pause (Space)' : v + ' hour(s) per second'}">${l}</button>`).join('')}</div>
+    ${w ? `<div class="warclock ${left <= 24 ? 'urgent' : ''}" title="Lose the war and everyone dies. A rewind point is saved 1 day before.">War #${w.number} in ${days}d ${hrs}h</div>` : ''}
     <div class="spacer"></div>
+    <label class="muted" title="Pause automatically on warnings, unlocks and emergencies"><input type="checkbox" data-change="autoPause" ${s.autoPause ? 'checked' : ''}> Auto-pause</label>
     ${btn('Save', 'save')} ${btn('Load', 'load')} ${btn('New game', 'newGame')}`;
 };
 
 GTM.renderRes = function (s) {
   const need = GTM.dailyFoodNeed(s);
   const food = GTM.foodTotal(s);
-  const foodRate = (s.ledger.meat || 0) + (s.ledger.fruit || 0) + (s.ledger.dried || 0);
+  // Projected daily food balance (gathering minus eating), so it reacts instantly, even while paused.
+  const outp = GTM.zoneOutput(s);
+  const foodRate = Object.values(outp).reduce((a, z) => a + (z.perDay.fruit || 0) + (z.perDay.meat || 0), 0) - need;
   const daysLeft = need > 0 ? food / need : Infinity;
-  const cell = (k, v, r, alert) => `<div class="res ${alert ? 'alert' : ''}"><div class="k">${k}</div><div class="v">${v}</div>${r != null ? `<div class="r ${r < 0 ? 'bad' : 'good'}">${r}</div>` : ''}</div>`;
+  const cell = (k, v, r, alert, title) => `<div class="res ${alert ? 'alert' : ''}" title="${esc(title || '')}"><div class="k">${k}</div><div class="v">${v}</div>${r != null ? `<div class="r ${String(r).startsWith('-') ? 'bad' : 'good'}">${r}</div>` : ''}</div>`;
   const rate = res => { const d = (s.ledger[res] || 0) * 24; return Math.abs(d) < 0.05 ? null : sgn(d) + '/day'; };
   const out = [];
-  out.push(cell('Food (' + f1(daysLeft) + ' days)', f0(food) + ' / ' + GTM.storageCap(s, 'meat'), sgn(foodRate * 24) + '/day', daysLeft < 2));
-  out.push(cell('Fruit / Meat / Dried', f0(s.resources.fruit) + ' / ' + f0(s.resources.meat) + ' / ' + f0(s.resources.dried), 'eat ' + f1(need) + '/day'));
+  out.push(`<div class="res food ${daysLeft < 3 && foodRate < 0 ? 'alert' : ''}" title="Eaten: ${f1(need)}/day. Fruit ${f0(s.resources.fruit)}, meat ${f0(s.resources.meat)}, dried ${f0(s.resources.dried)}. Cap ${GTM.storageCap(s, 'meat')}.">
+    <div class="k">Food</div><div class="v"><b class="${daysLeft < 1 ? 'bad' : daysLeft < 3 && foodRate < 0 ? 'warn' : 'good'}">${daysLeft === Infinity ? '∞' : f1(daysLeft)} days</b> <span class="muted">(${f0(food)})</span></div>
+    <div class="r ${foodRate < 0 ? 'bad' : 'good'}">${sgn(foodRate)}/day</div></div>`);
+  if (shown(s, 'res', 'foodTypes')) out.push(cell('Fruit / Meat / Dried', f0(s.resources.fruit) + ' / ' + f0(s.resources.meat) + ' / ' + f0(s.resources.dried), null));
   for (const r of ['wood', 'stone', 'leather', 'silk', 'scrap', 'ammo', 'repairKits', 'crossbows']) {
-    if (['silk', 'scrap', 'repairKits', 'crossbows'].includes(r) && s.resources[r] < 0.5 && !s.ledger[r]) continue;
-    const rr = rate(r);
-    out.push(cell(GTM.RESOURCES[r].label, f0(s.resources[r]) + ' / ' + GTM.storageCap(s, r), rr));
+    if (!shown(s, 'res', r)) continue;
+    out.push(cell(GTM.RESOURCES[r].label, f0(s.resources[r]), rate(r), false, 'Storage cap ' + GTM.storageCap(s, r)));
   }
-  out.push(`<div class="res" style="min-width:150px"><div class="k">Morale ${f0(s.morale)} (target ${f0(s.moraleTarget)})</div>${bar(s.morale, 'morale', s.moraleTarget)}<div class="r muted">output x${GTM.moraleFactor(s).toFixed(2)}</div></div>`);
-  out.push(cell('Contribution Pts', f0(s.cp), null));
-  out.push(cell('Population', s.goblins.length + ' / ' + GTM.housingCap(s), s.goblins.filter(g => g.injured > 0).length ? s.goblins.filter(g => g.injured > 0).length + ' injured' : null, s.goblins.length > GTM.housingCap(s)));
-  out.push(cell('Prestige', f0(s.prestige), null));
+  if (shown(s, 'res', 'morale')) out.push(`<div class="res" style="min-width:140px" title="Morale scales all work (x${GTM.moraleFactor(s).toFixed(2)} now). Details in Hierarchy."><div class="k">Morale ${f0(s.morale)} → ${f0(s.moraleTarget)}</div>${bar(s.morale, 'morale', s.moraleTarget)}</div>`);
+  if (shown(s, 'res', 'cp')) out.push(cell('Points', f0(s.cp), null, false, 'Contribution Points: earned by work, spent on promotions, research and bonuses.'));
+  const idle = s.goblins.filter(g => g.role === 'idle').length;
+  const inj = s.goblins.filter(g => g.injured > 0).length;
+  out.push(cell('Goblins', s.goblins.length + ' / ' + GTM.housingCap(s), idle ? idle + ' idle' : inj ? '-' + inj + ' injured' : null, s.goblins.length > GTM.housingCap(s), 'Population / housing cap'));
+  if (shown(s, 'res', 'prestige')) out.push(cell('Prestige', f0(s.prestige), null));
   return out.join('');
 };
 
-GTM.renderTabs = s => GTM.TABS.map(([id, l]) => `<button data-action="tab" data-v="${id}" class="${GTM.ui.tab === id ? 'on' : ''}">${l}</button>`).join('');
+GTM.renderTabs = s => GTM.TABS.filter(([id]) => shown(s, 'tabs', id)).map(([id, l]) =>
+  `<button data-action="tab" data-v="${id}" class="${GTM.ui.tab === id ? 'on' : ''}">${l}${s.revealed.newTabs.includes(id) ? ' <span class="newtag">NEW</span>' : ''}</button>`).join('');
+
+// Pinned "current goal" card (guided mode only).
+GTM.renderObjective = function (s) {
+  const o = GTM.currentObjective(s);
+  if (!o) return '';
+  const n = GTM.OBJECTIVES.indexOf(o) + 1;
+  return `<div class="objective">
+    <img src="research/assets/char-manager-oh.svg" alt="" class="obj-face">
+    <div class="obj-body"><div class="obj-k">GOAL ${n}/${GTM.OBJECTIVES.length}</div>
+      <div class="obj-text">${esc(o.text)}</div>
+      <div class="obj-why">${esc(GTM.ADVISOR)}: “${esc(o.why)}”</div></div>
+    <div class="obj-actions">${GTM.ui.tab !== o.tab ? btn('Show me', 'showMe', {}, { cls: 'primary' }) : ''} <button data-action="skipTutorial" class="link">skip tutorial</button></div>
+  </div>`;
+};
+
+GTM.renderIntro = s => `<div class="overlay"><div class="card memo">
+  <img src="research/assets/char-manager-oh.svg" alt="Manager Oh" class="memo-face">
+  <div><div class="memo-k">MEMO FROM THE SYSTEM</div>
+  <p class="memo-text">You are now Lord of this goblin territory.<br>Territory War on <b>Day ${GTM.WAR.firstAtDay}</b>. Lose, and everyone dies.</p>
+  <p>${btn('Clock in', 'clockIn', {}, { cls: 'primary big' })} <button data-action="skipTutorialIntro" class="link">I know the game: skip tutorial</button></p></div>
+</div></div>`;
 
 GTM.renderLog = function (s) {
   const f = GTM.ui.logFilter;
@@ -73,40 +104,42 @@ GTM.renderLog = function (s) {
 GTM.renderZones = function (s) {
   const out = GTM.zoneOutput(s);
   const est = s.war ? GTM.enemyEstimate(s) : {};
-  const cards = s.zoneOrder.map(zid => {
+  const showBuild = shown(s, 'tabs', 'build'), showWar = shown(s, 'tabs', 'war');
+  const idle = s.goblins.filter(g => g.role === 'idle').length;
+  const cards = s.zoneOrder.filter(zid => shown(s, 'zones', zid)).map(zid => {
     const z = s.zones[zid], t = GTM.ZONES[zid];
     if (!z.explored) {
       const scouts = s.goblins.filter(g => g.role === 'scout' && g.zone === zid).length;
       return `<div class="card locked"><div class="row"><b>${esc(z.name)}</b><span class="tag">Unexplored</span></div>
-        <div class="row muted">Mapping progress ${f0(z.exploreProgress)} / ${t.exploreCost} (${scouts} scout${scouts === 1 ? '' : 's'})</div>
+        <div class="row muted">Mapping ${f0(z.exploreProgress)} / ${t.exploreCost} (${scouts} scout${scouts === 1 ? '' : 's'})</div>
         ${bar(100 * z.exploreProgress / t.exploreCost)}
-        <div class="row">${btn('+ Send scout', 'autoAssign', { role: 'scout', zone: zid })} <span class="muted">Rumored: ${Object.values(t.nodes).map(n => n.label).join(', ')}</span></div></div>`;
+        <div class="row">${btn('+ Send scout', 'autoAssign', { role: 'scout', zone: zid })} <span class="muted" title="${esc(Object.values(t.nodes).map(n => n.label).join(', '))}">Rumored riches ⓘ</span></div></div>`;
     }
     const o = out[zid];
     const guards = s.goblins.filter(g => GTM.ROLES[g.role].military && g.zone === zid);
     const isTarget = est.zone === zid;
-    const prod = Object.entries(o.perDay).map(([r, v]) => `${f1(v)} ${GTM.RESOURCES[r].label}`).join(', ') || '<span class="muted">nothing</span>';
+    const prod = Object.entries(o.perDay).map(([r, v]) => `+${f1(v)} ${GTM.RESOURCES[r].label}`).join(', ') || '<span class="muted">nothing yet</span>';
     const queued = s.buildQueue.filter(q => q.zone === zid);
     return `<div class="card ${isTarget ? 'target' : ''}">
       <div class="row"><b>${esc(z.name)}</b>${isTarget ? '<span class="tag" style="border-color:var(--war)">ENEMY TARGET</span>' : ''}
-        <span class="muted">danger ${(GTM.zoneDanger(s, zid) * 100).toFixed(1)}%/worker/day</span></div>
-      <div class="row"><span>Laborers <b class="${o.workers.length > t.capacity ? 'bad' : ''}">${o.workers.length}</b> / ${t.capacity} safe</span>
-        <span>${btn('-', 'autoUnassign', { role: 'laborer', zone: zid })} ${btn('+', 'autoAssign', { role: 'laborer', zone: zid })}</span></div>
-      ${o.crowding < 1 ? `<div class="row bad">Over capacity: output x${o.crowding.toFixed(2)}, danger up.</div>` : ''}
-      <div class="row"><span>Work node</span><select data-change="focus" data-zone="${zid}">${Object.entries(t.nodes).map(([k, n]) => opt(k, n.label + ' (' + Object.entries(n.yields).map(([r, v]) => v + ' ' + GTM.RESOURCES[r].label).join(', ') + ')', z.focus)).join('')}</select></div>
-      <div class="row"><span>Output/day</span><span>${prod}</span></div>
-      <div class="row"><span>Road</span><span>${z.road ? (t.home ? 'Home zone' : 'Built') : `<span class="warn">None (output x${GTM.offroad(s, zid)})</span> ` + btn('Build road', 'road', { zone: zid }, { disabled: queued.some(q => q.kind === 'road'), title: GTM.fmtCost(GTM.roadCost(s)) })}</span></div>
-      <div class="row"><span>Guards</span><span>${guards.length} (${guards.filter(g => g.role === 'warrior').length}W / ${guards.filter(g => g.role === 'ranged').length}R)</span></div>
-      <div class="row"><span>Buildings ${z.buildings.length}/${t.slots}</span><span>${z.buildings.map(b => `<span class="tag">${esc(GTM.BUILDINGS[b].name)}</span>`).join('') || '<span class="muted">none</span>'}</span></div>
+        <span class="muted" title="Chance per worker per day of an accident">danger ${(GTM.zoneDanger(s, zid) * 100).toFixed(1)}% ⓘ</span></div>
+      <div class="row"><span>Workers <b class="${o.workers.length > t.capacity ? 'bad' : ''}">${o.workers.length}</b><span class="muted"> / ${t.capacity} safe</span></span>
+        <span>${btn('−', 'autoUnassign', { role: 'laborer', zone: zid }, { cls: 'big', disabled: !o.workers.length })} ${btn('+', 'autoAssign', { role: 'laborer', zone: zid }, { cls: 'big primary', disabled: !idle, title: idle ? 'Assign the best-fit idle goblin' : 'No idle goblins' })}</span></div>
+      ${o.crowding < 1 ? `<div class="row bad">Over capacity: less output, more accidents.</div>` : ''}
+      <div class="row"><span>Working on</span><select data-change="focus" data-zone="${zid}">${Object.entries(t.nodes).map(([k, n]) => opt(k, n.label + ' (' + Object.keys(n.yields).map(r => GTM.RESOURCES[r].label).join(', ') + ')', z.focus)).join('')}</select></div>
+      <div class="row"><span>Output</span><span class="good">${prod}${o.workers.length ? '/day' : ''}</span></div>
+      ${showBuild && !t.home ? `<div class="row"><span>Road</span><span>${z.road ? 'Built' : `<span class="warn" title="No road: output x${GTM.offroad(s, zid)}">None ⓘ</span> ` + btn('Build road', 'road', { zone: zid }, { disabled: queued.some(q => q.kind === 'road'), title: GTM.fmtCost(GTM.roadCost(s)) })}</span></div>` : ''}
+      ${showWar ? `<div class="row"><span>Guards</span><span>${guards.length} (${guards.filter(g => g.role === 'warrior').length}W / ${guards.filter(g => g.role === 'ranged').length}R)</span></div>` : ''}
+      ${showBuild ? `<div class="row"><span>Buildings ${z.buildings.length}/${t.slots}</span><span>${z.buildings.map(b => `<span class="tag">${esc(GTM.BUILDINGS[b].name)}</span>`).join('') || '<span class="muted">none</span>'}</span></div>` : ''}
       ${queued.length ? `<div class="row muted"><span>Queued</span><span>${queued.map(q => q.kind === 'road' ? 'Road' : GTM.BUILDINGS[q.id].name).join(', ')}</span></div>` : ''}
     </div>`;
   });
-  return `<div class="grid">${cards.join('')}</div>`;
+  return `${idle ? `<p class="hint">${idle} idle goblin${idle === 1 ? '' : 's'} waiting for orders. Use <b>+</b> to put them to work.</p>` : ''}<div class="grid">${cards.join('')}</div>`;
 };
 
 // ---------- Population ----------
 GTM.postOptions = function (s, g) {
-  const zones = s.zoneOrder.map(z => s.zones[z]);
+  const zones = s.zoneOrder.filter(z => shown(s, 'zones', z)).map(z => s.zones[z]);
   if (g.role === 'laborer') return zones.filter(z => z.explored).map(z => [z.id, z.name]);
   if (GTM.ROLES[g.role].military) return [['reserve', 'Reserve']].concat(zones.filter(z => z.explored).map(z => [z.id, 'Defend ' + z.name]));
   if (g.role === 'scout') return [['enemy', 'Scout enemy']].concat(zones.filter(z => !z.explored).map(z => [z.id, 'Explore ' + z.name]));
@@ -124,7 +157,15 @@ GTM.renderPopulation = function (s) {
   const ui = GTM.ui;
   const counts = {};
   for (const g of s.goblins) counts[g.role] = (counts[g.role] || 0) + 1;
-  const roleCards = Object.entries(GTM.ROLES).map(([id, r]) => {
+  const roleVisible = id => {
+    const r = GTM.ROLES[id];
+    if (r.namedOnly) return s.goblins.some(g => g.named);
+    if (r.requires) return GTM.hasBuilding(s, r.requires) || shown(s, 'tabs', 'research');
+    if (id === 'builder') return shown(s, 'tabs', 'build');
+    if (r.military || id === 'scout') return shown(s, 'tabs', 'war');
+    return true;
+  };
+  const roleCards = Object.entries(GTM.ROLES).filter(([id]) => roleVisible(id)).map(([id, r]) => {
     if (r.namedOnly) return `<div class="card"><div class="muted">${r.label}</div><b>${counts[id] || 0}</b></div>`;
     const slots = GTM.roleSlots(s, id);
     const locked = r.requires && slots === 0;
@@ -156,9 +197,9 @@ GTM.renderPopulation = function (s) {
       <td>${GTM.rankOf(g).label}</td>
       <td>${g.role === 'specialist' ? 'Specialist: ' + GTM.POSITIONS[g.position].name : `<select data-change="role" data-id="${g.id}">${GTM.roleOptions(s, g).map(([v, l]) => opt(v, l, g.role)).join('')}</select>`}</td>
       <td>${posts ? `<select data-change="post" data-id="${g.id}">${posts.map(([v, l]) => opt(v, l, g.zone)).join('')}</select>` : ''}</td>
-      ${GTM.STATS.map(st => `<td class="num">${f1(g.stats[st]).replace('.0', '')}</td>`).join('')}
-      <td class="num">${f1(GTM.statFactor(g))}</td>
-      <td class="num">${f1(g.contribution.lifetime)}</td><td class="num">${f1(g.contribution.recent)}</td>
+      ${ui.details ? GTM.STATS.map(st => `<td class="num">${f1(g.stats[st]).replace('.0', '')}</td>`).join('') : ''}
+      <td class="num" title="How well this goblin's stats suit its role (1.0 = average)">${f1(GTM.statFactor(g))}</td>
+      ${ui.details ? `<td class="num">${f1(g.contribution.lifetime)}</td><td class="num">${f1(g.contribution.recent)}</td>` : ''}
       <td>${statusParts.join(' ')}</td></tr>`;
   }).join('');
 
@@ -166,16 +207,16 @@ GTM.renderPopulation = function (s) {
   return `<div class="rolebar">${roleCards}</div>
     <div class="panel-section">
       <div class="row" style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-bottom:.4rem">
-        Filter <select data-change="roleFilter">${opt('all', 'All roles', ui.roleFilter)}${Object.entries(GTM.ROLES).map(([v, r]) => opt(v, r.label, ui.roleFilter)).join('')}</select>
+        ${btn(ui.details ? 'Hide stats' : 'Show stats', 'toggleDetails')}
+        ${ui.details ? `Filter <select data-change="roleFilter">${opt('all', 'All roles', ui.roleFilter)}${Object.entries(GTM.ROLES).map(([v, r]) => opt(v, r.label, ui.roleFilter)).join('')}</select>
         <span class="muted">|</span> ${sel} selected:
         <select id="bulkRole">${Object.entries(GTM.ROLES).filter(([id]) => id !== 'specialist').map(([v, r]) => opt(v, r.label)).join('')}</select>
         <select id="bulkPost"><option value="">(default post)</option>${opt('reserve', 'Reserve')}${opt('enemy', 'Scout enemy')}${s.zoneOrder.map(z => opt(z, s.zones[z].name)).join('')}</select>
-        ${btn('Assign selected', 'bulkAssign', {}, { disabled: !sel })} ${btn('Select shown', 'selectShown')} ${btn('Clear', 'selectNone', {}, { disabled: !sel })}
+        ${btn('Assign selected', 'bulkAssign', {}, { disabled: !sel })} ${btn('Select shown', 'selectShown')} ${btn('Clear', 'selectNone', {}, { disabled: !sel })}` : ''}
       </div>
       <table class="nowrap"><thead><tr><th></th>${th('id', '#')}${th('name', 'Name')}${th('rank', 'Rank')}${th('role', 'Role')}<th>Post / Zone</th>
-        ${GTM.STATS.map(st => th(st, GTM.STAT_LABELS[st])).join('')}${th('fit', 'Fit')}${th('life', 'Contrib')}${th('recent', 'Recent')}<th>Status</th></tr></thead>
+        ${ui.details ? GTM.STATS.map(st => th(st, GTM.STAT_LABELS[st])).join('') : ''}${th('fit', 'Fit')}${ui.details ? th('life', 'Contrib') + th('recent', 'Recent') : ''}<th>Status</th></tr></thead>
       <tbody>${rows}</tbody></table>
-      <p class="muted">Fit = how well the goblin's stats suit its current role (1.0 = average). "+" buttons pick the best-fit idle goblin; if none is idle, the best laborer.</p>
     </div>`;
 };
 
@@ -183,11 +224,14 @@ GTM.renderPopulation = function (s) {
 GTM.renderBuild = function (s) {
   const builders = s.goblins.filter(g => g.role === 'builder' && g.injured <= 0);
   const perDay = builders.reduce((a, g) => a + GTM.WORK_PER_DAY.builder * GTM.workerFactor(s, g), 0);
-  const explored = s.zoneOrder.filter(z => s.zones[z].explored);
-  const avail = Object.entries(GTM.BUILDINGS).map(([id, b]) => {
+  const explored = s.zoneOrder.filter(z => s.zones[z].explored && shown(s, 'zones', z));
+  const hiddenCount = Object.keys(GTM.BUILDINGS).filter(id => !shown(s, 'buildings', id)).length;
+  const goal = GTM.currentObjective(s);
+  const avail = Object.entries(GTM.BUILDINGS).filter(([id]) => shown(s, 'buildings', id)).map(([id, b]) => {
     const ok = GTM.requirementsMet(s, b.requires);
     const afford = GTM.canAfford(s, b.cost);
-    return `<tr class="${ok ? '' : 'muted'}"><td><b>${b.name}</b><br><span class="muted">${b.desc}</span></td><td>${b.tier}</td>
+    const rec = goal && goal.id === 'palisade' && id === 'palisade';
+    return `<tr class="${ok ? '' : 'muted'} ${rec ? 'rec' : ''}"><td title="${esc(b.desc)}"><b>${b.name}</b> <span class="muted">ⓘ</span>${rec ? ' <span class="tag good">Recommended</span>' : ''}</td><td>${b.tier}</td>
       <td class="${afford ? '' : 'bad'}">${GTM.fmtCost(b.cost)}</td><td class="num">${b.work}</td>
       <td>${ok ? `<select id="bz_${id}">${explored.map(z => opt(z, s.zones[z].name + ' (' + (GTM.ZONES[z].slots - s.zones[z].buildings.length - s.buildQueue.filter(q => q.zone === z && q.kind === 'building').length) + ' free)')).join('')}</select> ${btn('Queue', 'queueBuild', { id }, { disabled: !afford })}` : 'Needs ' + GTM.describeReq(b.requires)}</td></tr>`;
   }).join('');
@@ -204,20 +248,30 @@ GTM.renderBuild = function (s) {
   const craftDay = crafters.reduce((a, g) => a + GTM.WORK_PER_DAY.craftsman * GTM.workerFactor(s, g) * (g.named && g.named.trait === 'crafting' ? 2 : 1), 0);
   const rec = GTM.RECIPES[s.craftRecipe];
   return `<div class="panel-section"><h2>Build queue</h2>
-      <p>${builders.length} builder(s): <b>${f1(perDay)}</b> work/day ${btn('+ builder', 'autoAssign', { role: 'builder' })} ${btn('- builder', 'autoUnassign', { role: 'builder' })}
-      <span class="muted">Builders work the top item; materials are paid when queued, refunded on cancel.</span></p>
+      <p>Builders <b>${builders.length}</b> ${btn('−', 'autoUnassign', { role: 'builder' }, { cls: 'big' })} ${btn('+', 'autoAssign', { role: 'builder' }, { cls: 'big primary' })}
+      <span class="muted" title="Builders work the top item. Materials are paid when queued and refunded on cancel.">${f1(perDay)} work/day ⓘ</span>
+      ${shown(s, 'flags', 'overtime') ? GTM.overtimeButton(s, 'builder') : ''}</p>
       ${queue ? `<table><thead><tr><th>#</th><th>Project</th><th>Zone</th><th>Progress</th><th>ETA</th><th></th></tr></thead><tbody>${queue}</tbody></table>` : '<p class="muted">Queue empty.</p>'}
     </div>
-    <div class="panel-section"><h2>Workshop crafting</h2>
+    ${shown(s, 'buildings', 'workshop') ? `<div class="panel-section"><h2>Workshop crafting</h2>
       ${GTM.hasBuilding(s, 'workshop') ? `<p>${crafters.length} craftsman/men: ${f1(craftDay)} work/day. Recipe:
         <select data-change="recipe">${Object.entries(GTM.RECIPES).filter(([, r]) => GTM.requirementsMet(s, r.requires)).map(([id, r]) => opt(id, r.name, s.craftRecipe)).join('')}</select>
         ${bar(100 * Math.min(1, s.craftProgress / rec.work))}
         ${craftDay > 0 ? '~' + f1(craftDay / rec.work) + ' batches/day' : ''} ${!GTM.canAfford(s, rec.in) ? '<span class="bad">missing inputs</span>' : ''}</p>`
         : '<p class="muted">Build a Workshop to unlock Craftsmen (ammo, repair kits, crossbows).</p>'}
-    </div>
+    </div>` : ''}
     <div class="panel-section"><h2>Buildings</h2>
       <table><thead><tr><th>Building</th><th>Tier</th><th>Cost</th><th>Work</th><th>Place</th></tr></thead><tbody>${avail}</tbody></table>
+      ${hiddenCount ? `<p class="muted">${hiddenCount} more building${hiddenCount === 1 ? '' : 's'} unlock as the territory grows.</p>` : ''}
     </div>`;
+};
+
+// Inline overtime toggle for a role (also used by the Hierarchy panel).
+GTM.overtimeButton = function (s, role) {
+  const o = s.overtime[role];
+  if (o.active) return btn('Stop overtime (' + f1(o.ticksLeft / 24) + 'd left)', 'stopOT', { role }, { cls: 'warnbtn' });
+  if (o.cooldown > 0) return `<span class="muted">Overtime cooldown ${f1(o.cooldown / 24)}d</span>`;
+  return btn('⚡ Overtime', 'startOT', { role }, { title: '+40% output, +30% food, morale down. 2 days max.' });
 };
 
 // ---------- Research ----------
@@ -320,7 +374,7 @@ GTM.renderWar = function (s) {
   const est = GTM.enemyEstimate(s);
   const left = w.atTick - s.tick;
   const scouts = s.goblins.filter(g => g.role === 'scout' && g.zone === 'enemy');
-  const explored = s.zoneOrder.filter(z => s.zones[z].explored);
+  const explored = s.zoneOrder.filter(z => s.zones[z].explored && shown(s, 'zones', z));
   const rows = explored.map(zid => {
     const d = GTM.computeDefense(s, zid);
     const cls = d.total >= est.hi ? 'good' : d.total >= est.lo ? 'warn' : 'bad';
@@ -331,18 +385,23 @@ GTM.renderWar = function (s) {
   const bd = GTM.computeDefense(s, viewZone);
   const ranged = s.goblins.filter(g => g.role === 'ranged').length;
   const counts = r => s.goblins.filter(g => g.role === r).length;
-  return `<div class="split"><div>
+  const target = est.zone || null;
+  const you = target ? GTM.computeDefense(s, target).total : Math.min(...explored.map(z => GTM.computeDefense(s, z).total));
+  const scale = Math.max(you, est.hi) * 1.1;
+  return `<div class="panel-section vs"><div class="row"><b>You ${f1(you)}</b><span class="muted">${target ? 'defending ' + esc(s.zones[target].name) : 'weakest zone (target unknown: scout!)'}</span><b class="bad">Enemy ${est.known ? est.lo + '–' + est.hi : '??'}</b></div>
+      <div class="vsbar"><i class="you" style="width:${100 * you / scale}%"></i><i class="enemy" style="left:${100 * est.lo / scale}%;width:${100 * (est.hi - est.lo) / scale}%"></i></div></div>
+    <div class="split"><div>
     <div class="panel-section"><h2>Territory War #${w.number}</h2>
       <p>Starts ${GTM.fmtTime(w.atTick)} (in ${Math.floor(left / 24)}d ${left % 24}h).</p>
       <p>Enemy strength: <b>${est.lo} - ${est.hi}</b> ${est.known ? '<span class="good">(accurate)</span>' : '<span class="warn">(rough guess)</span>'}</p>
       <p>Attack target: ${est.zone ? '<b class="warn">' + esc(s.zones[est.zone].name) + '</b>' : '<span class="muted">unknown</span>'}</p>
       <p>Intel ${f1(s.intel)}: zone at ${GTM.WAR.intelZone}, strength at ${GTM.WAR.intelPower}. ${scouts.length} scout(s) on the enemy. ${btn('+ scout', 'autoAssign', { role: 'scout', zone: 'enemy' })}</p>
       ${bar(100 * Math.min(1, s.intel / GTM.WAR.intelPower))}
-      <p class="muted">A watchtower in the targeted zone also reveals the attack 1 day early. Lose the war and the game ends.</p>
+      <p class="muted" title="A watchtower in the targeted zone also reveals the attack 1 day early.">Scouts reveal the target, then its strength ⓘ</p>
     </div>
     <div class="panel-section"><h2>Projected defense by attacked zone</h2>
       <table><thead><tr><th>If enemy attacks</th><th>Defense</th><th></th></tr></thead><tbody>${rows}</tbody></table>
-      <p class="muted">Green: beats the high estimate. Yellow: inside the range. Red: below it. Results vary ±10% each side.</p>
+      <p class="muted" title="Green: beats the high estimate. Yellow: inside the range. Red: below it. Each side rolls ±10%.">Colours compare you to the enemy estimate ⓘ</p>
     </div></div><div>
     <div class="panel-section"><h2>Breakdown: ${esc(s.zones[viewZone].name)}</h2>
       <table><tbody>${bd.lines.map(([l, v]) => `<tr><td>${esc(l)}</td><td class="num">${typeof v === 'number' ? f1(v) : esc(v)}</td></tr>`).join('')}
@@ -352,7 +411,7 @@ GTM.renderWar = function (s) {
       <p>Warriors ${counts('warrior')} ${btn('+', 'autoAssign', { role: 'warrior', zone: 'reserve' })} · Ranged ${counts('ranged')} ${btn('+', 'autoAssign', { role: 'ranged', zone: 'reserve' })}</p>
       <p>Ammo ${f0(s.resources.ammo)} / needed ${ranged * GTM.WAR.ammoPerRanged} ${s.resources.ammo < ranged * GTM.WAR.ammoPerRanged ? '<span class="bad">short: ranged fight at reduced power</span>' : ''}</p>
       <p>Crossbows ${f0(s.resources.crossbows)} · Repair kits ${f0(s.resources.repairKits)} (save a palisade from destruction)</p>
-      <p class="muted">Defenders posted in the attacked zone fight at full strength, reserve at 80% (100% with a watchtower there), goblins posted elsewhere at 50% (75% if the attacked zone has a road). Everyone else fights as weak militia. Pit traps are spent when triggered.</p>
+      <p class="muted" title="Defenders in the attacked zone fight at 100%, reserve at 80% (100% with a watchtower there), goblins posted elsewhere at 50% (75% with a road). Everyone else fights as weak militia. Pit traps are spent when triggered.">Post defenders where the enemy will strike ⓘ</p>
     </div></div></div>`;
 };
 
@@ -372,5 +431,7 @@ GTM.renderPanel = function (s) {
     hierarchy: GTM.renderHierarchy, war: GTM.renderWar, debug: GTM.renderDebug })[GTM.ui.tab](s);
 };
 
-GTM.renderGameOver = s => s.gameOver ? `<div class="overlay"><div class="card"><h2 class="bad">GAME OVER</h2><p>${esc(s.gameOver.reason)}</p>
-  <p>You survived ${GTM.day(s)} days and won ${s.warsWon} war(s).</p>${btn('Start a new territory', 'newGame', {}, { cls: 'primary' })} ${btn('Inspect final state', 'closeOverlay')}</div></div>` : '';
+GTM.renderGameOver = (s, checkpoint) => s.gameOver ? `<div class="overlay"><div class="card"><h2 class="bad">GAME OVER</h2><p>${esc(s.gameOver.reason)}</p>
+  <p>You survived ${GTM.day(s)} days and won ${s.warsWon} war(s).</p>
+  ${checkpoint && checkpoint.seed === s.seed ? `<p>${btn('⟲ Rewind to dawn of Day ' + checkpoint.day, 'rewind', {}, { cls: 'primary big' })}</p><p class="muted">One day to fix your defenses. Check the War Room.</p>` : ''}
+  <p>${btn('Start a new territory', 'newGame')} ${btn('Inspect final state', 'closeOverlay')}</p></div></div>` : '';

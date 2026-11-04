@@ -183,6 +183,13 @@ GTM.tick = function (s) {
 
   // Ledger: net change this tick, for per-day rate display.
   for (const r in s.resources) s.ledger[r] = s.resources[r] - before[r];
+
+  // Food alarm: pause once when stocks drop under a day; re-arm once back above two days.
+  const foodDays = GTM.foodTotal(s) / Math.max(1, GTM.dailyFoodNeed(s));
+  if (foodDays < 1 && !s.flags.foodAlarm) { s.flags.foodAlarm = true; GTM.notify(s, 'Food under 1 day! Put more goblins on Fruit or Hunting.', true); }
+  else if (foodDays > 2) s.flags.foodAlarm = false;
+
+  if (GTM.onboardingTick) GTM.onboardingTick(s);
 };
 
 GTM.addContribution = function (s, g, amt) {
@@ -205,6 +212,10 @@ GTM.scoutWork = function (s, g, w) {
 
 GTM.incident = function (s, g, zid) {
   const zname = s.zones[zid].name;
+  if (!s.flags.firstIncident) {
+    s.flags.firstIncident = true;
+    GTM.notify(s, 'First workplace accident at ' + zname + '. Crowded or dangerous zones hurt goblins. Guards and watchtowers help.', true);
+  }
   const deadly = GTM.rand(s) < 0.25 && !(g.named && g.named.trait === 'ironhide');
   if (deadly) {
     GTM.log(s, 'bad', GTM.goblinName(g) + ' was killed in an accident at ' + zname + '.');
@@ -480,6 +491,7 @@ GTM.startOvertime = function (s, role) {
   if (o.active) return 'Already running.';
   if (o.cooldown > 0) return 'Workers are still recovering.';
   o.active = true; o.ticksLeft = GTM.OVERTIME.maxTicks;
+  s.flags.usedOvertime = true;
   GTM.log(s, 'info', 'Overtime campaign started for ' + GTM.ROLES[role].label + 's (2 days, +40% output, +30% food, morale hit).');
   return null;
 };
@@ -675,10 +687,16 @@ GTM.warTick = function (s) {
   const w = s.war;
   if (!w || s.gameOver) return;
   const left = w.atTick - s.tick;
+  if (left === 3 * T()) {
+    GTM.log(s, 'war', 'Territory War #' + w.number + ' in 3 days.');
+    GTM.notify(s, 'War in 3 days. Check the War Room.', true);
+  }
   if (left === T() && !w.warned) {
     w.warned = true;
     const est = GTM.enemyEstimate(s);
-    GTM.log(s, 'war', 'WARNING: Territory War #' + w.number + ' begins in 1 day. Enemy strength ' + est.lo + '-' + est.hi + '. Target: ' + (est.zone ? s.zones[est.zone].name : 'unknown'));
+    const msg = 'Territory War #' + w.number + ' begins in 1 day. Enemy strength ' + est.lo + '-' + est.hi + '. Target: ' + (est.zone ? s.zones[est.zone].name : 'unknown');
+    GTM.log(s, 'war', 'WARNING: ' + msg);
+    GTM.notify(s, msg + '. (Checkpoint saved: you can rewind to now.)', true);
   }
   if (left <= 0) GTM.resolveWar(s);
 };
@@ -744,6 +762,7 @@ GTM.resolveWar = function (s) {
   }
   GTM.log(s, 'good', 'VICTORY! ' + dead + ' fallen. ' + captives + ' enemy goblins join as idle Interns (low loyalty). Loot: ~' + loot + ' meat/wood and more. Territory Level ' + s.level + '.' + zoneMsg);
   if (s.level === 2) GTM.log(s, 'info', 'Director rank and a 2nd naming slot unlocked.');
+  GTM.notify(s, 'VICTORY! Territory War #' + w.number + ' won. New zone, new goblins, Level ' + s.level + '. See the log for details.', true);
   GTM.scheduleWar(s, s.tick + GTM.WAR.interval * T());
   GTM.log(s, 'system', 'SYSTEM: Territory War #' + s.war.number + ' begins on day ' + (Math.floor(s.war.atTick / T()) + 1) + '.');
 };

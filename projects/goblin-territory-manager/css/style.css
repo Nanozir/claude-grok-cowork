@@ -83,3 +83,34 @@ pre.inspect { background: #0f1115; padding: .6rem; border-radius: 4px; max-heigh
   #logpane { max-height: 40vh; border-left: 0; border-top: 1px solid var(--line); }
   .split { grid-template-columns: 1fr; }
 }
+
+/* ---- Onboarding ---- */
+#objective:empty { display: none; }
+.objective { display: flex; align-items: center; gap: .8rem; background: #1c2a1f; border: 1px solid var(--accent); border-radius: 8px; padding: .5rem .8rem; margin-bottom: .7rem; }
+.obj-face { width: 44px; height: 52px; object-fit: cover; object-position: top; border-radius: 6px; background: var(--panel2); }
+.obj-body { flex: 1; min-width: 0; }
+.obj-k { font-size: .7rem; color: var(--accent); letter-spacing: .08em; font-weight: 700; }
+.obj-text { font-size: 1.1rem; font-weight: 600; }
+.obj-why { color: var(--muted); font-size: .85rem; }
+.obj-actions { display: flex; gap: .4rem; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+button.link { background: none; border: 0; color: var(--muted); text-decoration: underline; padding: 0 4px; }
+button.big { font-size: 1.05rem; padding: 4px 14px; min-width: 2.2em; }
+button.primary { background: #2c4a2a; border-color: var(--accent); }
+button.warnbtn { border-color: var(--warn); color: var(--warn); }
+.newtag { background: var(--accent); color: #000; font-size: .62rem; font-weight: 700; padding: 0 4px; border-radius: 6px; vertical-align: 2px; }
+.hint { color: var(--warn); margin: 0 0 .6rem; }
+tr.rec td { background: #1c2a1f; }
+.tag.good { border-color: var(--accent); color: var(--accent); }
+.overlay .card.memo { display: flex; gap: 1.2rem; align-items: center; text-align: left; max-width: 620px; border-color: var(--warn); }
+.memo-face { width: 150px; flex: none; }
+.memo-k { color: var(--warn); font-weight: 700; letter-spacing: .08em; font-size: .78rem; }
+.memo-text { font-size: 1.3rem; line-height: 1.4; margin: .4rem 0 1rem; }
+.res.food .v { font-size: 1.05rem; }
+.vs .row { display: flex; justify-content: space-between; gap: .5rem; }
+.vsbar { position: relative; height: 14px; background: var(--panel2); border-radius: 7px; overflow: hidden; margin-top: 4px; }
+.vsbar .you { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); }
+.vsbar .enemy { position: absolute; top: 0; bottom: 0; background: repeating-linear-gradient(45deg, var(--bad) 0 6px, #8a3430 6px 12px); opacity: .85; }
+#toast { max-width: min(560px, 90vw); text-align: center; }
+#toast.good { background: #2f6b2a; }
+#toast.pause { background: #4a3a12; border: 1px solid var(--warn); font-weight: 600; }
+@media (max-width: 600px) { .overlay .card.memo { flex-direction: column; text-align: center; } .memo-face { width: 110px; } }

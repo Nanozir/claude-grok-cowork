@@ -1,21 +1,60 @@
-// Bootstraps the game: main loop, event delegation, save/load.
+// Bootstraps the game: main loop, event delegation, save/load, rewind checkpoint, notices.
 (function () {
   const SAVE_KEY = 'gtm-save-v1';
+  const REWIND_KEY = 'gtm-rewind-v2';
+  const TICKS_PER_SECOND = 1; // at 1x: 1 in-game hour per real second, so a day takes 24 s
   const $ = id => document.getElementById(id);
-  let state = GTM.newGame(Date.now() % 1e9);
+  const debugParam = /[?&]debug\b/.test(location.search);
+
+  let state = freshGame();
   let overlayHidden = false;
+  let checkpoint = readStore(REWIND_KEY); // { json, day, war } saved at dawn the day before each war
   window.GTM_STATE = () => state; // handy in the browser console
 
   const overlay = document.createElement('div');
   document.body.appendChild(overlay);
 
-  function toast(msg) {
+  function freshGame() {
+    const s = GTM.newGame(Date.now() % 1e9);
+    if (debugParam) GTM.reveal(s, 'tabs', ['debug']);
+    return s;
+  }
+  function readStore(key) {
+    try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : null; } catch (e) { return null; }
+  }
+  function writeStore(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch (e) { return false; }
+  }
+
+  // ---- Toasts: a small queue so notices don't overwrite each other ----
+  const toastQueue = [];
+  function toast(msg, kind = 'bad') {
     if (!msg) return;
-    const t = $('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    clearTimeout(toast.timer);
-    toast.timer = setTimeout(() => t.classList.remove('show'), 2200);
+    // Important notices jump the queue: drop pending (not yet shown) success toasts.
+    if (kind !== 'good') for (let i = toastQueue.length - 1; i >= 1; i--) if (toastQueue[i].kind === 'good') toastQueue.splice(i, 1);
+    toastQueue.push({ msg, kind });
+    if (toastQueue.length === 1) showNextToast();
+  }
+  function showNextToast() {
+    const t = $('toast'), item = toastQueue[0];
+    if (!item) return;
+    t.textContent = item.msg;
+    t.className = 'show ' + item.kind;
+    setTimeout(() => {
+      t.className = '';
+      toastQueue.shift();
+      setTimeout(showNextToast, 200);
+    }, item.kind === 'pause' ? 4500 : toastQueue.length > 1 ? 900 : 1800);
+  }
+  // Drain sim notices. Returns true if one of them asked to pause.
+  function drainNotices() {
+    let pause = false;
+    for (const n of state.notices.splice(0)) {
+      toast(n.msg, n.pause ? 'pause' : 'good');
+      if (n.pause && state.autoPause) pause = true;
+    }
+    if (pause) state.paused = true;
+    return pause;
   }
 
   // Re-rendering a panel while the player has a dropdown open would close it,
@@ -24,6 +63,7 @@
     $('topbar').innerHTML = GTM.renderTop(state);
     $('resbar').innerHTML = GTM.renderRes(state);
     $('tabs').innerHTML = GTM.renderTabs(state);
+    $('objective').innerHTML = GTM.renderObjective(state);
     const a = document.activeElement;
     const busy = a && $('panel').contains(a) && (a.tagName === 'SELECT' || a.tagName === 'INPUT');
     if (force || !busy) {
@@ -32,25 +72,42 @@
       document.querySelector('main').scrollTop = scroll;
     }
     $('log').innerHTML = GTM.renderLog(state);
-    overlay.innerHTML = overlayHidden ? '' : GTM.renderGameOver(state);
+    overlay.innerHTML = !state.flags.introDone ? GTM.renderIntro(state)
+      : overlayHidden ? '' : GTM.renderGameOver(state, checkpoint);
   }
 
-  // ---- Main loop: speed 1 = 2 ticks (hours) per real second ----
+  // Save a rewind point at dawn of the day before each war.
+  function maybeCheckpoint() {
+    const w = state.war;
+    if (!w || w.atTick - state.tick !== GTM.TICKS_PER_DAY) return;
+    if (checkpoint && checkpoint.war === w.number && checkpoint.seed === state.seed) return;
+    checkpoint = { json: JSON.stringify(state), day: GTM.day(state), war: w.number, seed: state.seed };
+    writeStore(REWIND_KEY, checkpoint);
+  }
+
+  // ---- Main loop ----
   let acc = 0, last = performance.now();
   setInterval(() => {
     const now = performance.now();
     const dt = (now - last) / 1000; last = now;
-    if (state.paused || state.gameOver) { acc = 0; return; }
-    acc += dt * state.speed * 2;
+    if (state.paused || state.gameOver || !state.flags.introDone) { acc = 0; return; }
+    acc += dt * state.speed * TICKS_PER_SECOND;
     let n = 0;
-    while (acc >= 1 && n < 50) { GTM.tick(state); acc--; n++; }
+    while (acc >= 1 && n < 50) {
+      GTM.tick(state); acc--; n++;
+      maybeCheckpoint();
+      if (drainNotices() || state.gameOver) { acc = 0; break; }
+    }
     if (n) render();
   }, 100);
 
   const goblin = id => state.goblins.find(g => g.id === Number(id));
 
   const actions = {
-    tab: d => { GTM.ui.tab = d.v; },
+    tab: d => {
+      GTM.ui.tab = d.v;
+      state.revealed.newTabs = state.revealed.newTabs.filter(t => t !== d.v);
+    },
     speed: d => { const v = Number(d.v); if (v === 0) state.paused = true; else { state.paused = false; state.speed = v; } },
     sort: d => { const s = GTM.ui.sort; if (s.key === d.v) s.dir = -s.dir; else { s.key = d.v; s.dir = d.v === 'id' || d.v === 'name' ? 1 : -1; } },
     autoAssign: d => GTM.autoAssign(state, d.role, d.zone),
@@ -78,10 +135,19 @@
     },
     selectShown: () => { for (const g of state.goblins) if (GTM.ui.roleFilter === 'all' || g.role === GTM.ui.roleFilter) GTM.ui.selected.add(g.id); },
     selectNone: () => GTM.ui.selected.clear(),
-    save: () => {
-      try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); return 'ok:Saved.'; }
-      catch (e) { return 'Save failed (browser storage unavailable). Use Debug > Export instead.'; }
+    toggleDetails: () => { GTM.ui.details = !GTM.ui.details; },
+    // Onboarding
+    clockIn: () => { state.flags.introDone = true; state.paused = false; state.speed = 1; },
+    skipTutorialIntro: () => { state.flags.introDone = true; GTM.skipTutorial(state); state.paused = true; },
+    skipTutorial: () => { if (confirm('Skip the guided start and show the full dashboard?')) GTM.skipTutorial(state); },
+    showMe: () => { const o = GTM.currentObjective(state); if (o) actions.tab({ v: o.tab }); },
+    rewind: () => {
+      if (!checkpoint) return 'No rewind point.';
+      const r = loadJSON(checkpoint.json);
+      GTM.log(state, 'system', 'SYSTEM: Rewound to dawn of Day ' + checkpoint.day + '. The enemy has not arrived yet.');
+      return r === 'ok:Loaded (paused).' ? 'ok:Rewound to Day ' + checkpoint.day + '. Paused.' : r;
     },
+    save: () => writeStore(SAVE_KEY, state) ? 'ok:Saved.' : 'Save failed (browser storage unavailable). Use Debug > Export instead.',
     load: () => {
       let raw = null;
       try { raw = localStorage.getItem(SAVE_KEY); } catch (e) { /* storage blocked */ }
@@ -90,12 +156,14 @@
     },
     newGame: () => {
       if (!state.gameOver && !confirm('Abandon this territory and start over?')) return null;
-      state = GTM.newGame(Date.now() % 1e9); overlayHidden = false; GTM.ui.selected.clear();
+      state = freshGame(); overlayHidden = false; GTM.ui.selected.clear(); GTM.ui.tab = 'zones';
+      checkpoint = null;
+      try { localStorage.removeItem(REWIND_KEY); } catch (e) { /* ignore */ }
     },
     closeOverlay: () => { overlayHidden = true; },
     export: () => {
       const txt = JSON.stringify(state);
-      if (navigator.clipboard) navigator.clipboard.writeText(txt).then(() => toast('Save copied to clipboard.'), () => prompt('Copy your save:', txt));
+      if (navigator.clipboard) navigator.clipboard.writeText(txt).then(() => toast('Save copied to clipboard.', 'good'), () => prompt('Copy your save:', txt));
       else prompt('Copy your save:', txt);
     },
     import: () => { const raw = prompt('Paste a save:'); return raw ? loadJSON(raw) : null; },
@@ -104,7 +172,7 @@
       if (d.k === 'food') { r.fruit += 50; r.meat += 50; }
       if (d.k === 'mats') { r.wood += 100; r.stone += 100; }
       if (d.k === 'cp') state.cp += 100;
-      if (d.k === 'day') for (let i = 0; i < 24; i++) GTM.tick(state);
+      if (d.k === 'day') for (let i = 0; i < 24; i++) { GTM.tick(state); maybeCheckpoint(); }
       if (d.k === 'war' && state.war) state.war.atTick = state.tick + 1;
       if (d.k === 'intel') state.intel = GTM.WAR.intelPower;
       if (d.k === 'morale') state.morale = 100;
@@ -114,8 +182,11 @@
   function loadJSON(raw) {
     try {
       const s = JSON.parse(raw);
-      if (!s || s.version !== 1 || !Array.isArray(s.goblins)) return 'Not a valid save.';
-      state = s; state.paused = true; overlayHidden = false;
+      if (!s || (s.version !== 1 && s.version !== 2) || !Array.isArray(s.goblins)) return 'Not a valid save.';
+      state = GTM.migrate(s);
+      state.paused = true; state.flags.introDone = true; overlayHidden = false;
+      if (debugParam) GTM.reveal(state, 'tabs', ['debug']);
+      if (!GTM.isRevealed(state, 'tabs', GTM.ui.tab)) GTM.ui.tab = 'zones';
       return 'ok:Loaded (paused).';
     } catch (e) { return 'Could not read save: ' + e.message; }
   }
@@ -129,29 +200,36 @@
     recipe: el => { state.craftRecipe = el.value; state.craftProgress = 0; },
     threshold: el => { const v = Math.max(0, Number(el.value) || 0); state.thresholds[Number(el.dataset.i)] = v; },
     autoPromote: el => { state.autoPromote = el.checked; },
+    autoPause: el => { state.autoPause = el.checked; },
     position: el => GTM.setPosition(state, el.dataset.pos, el.value ? Number(el.value) : null),
     logFilter: el => { GTM.ui.logFilter = el.value; },
   };
 
   function result(msg) {
-    if (typeof msg === 'string') toast(msg.startsWith('ok:') ? msg.slice(3) : msg);
+    if (typeof msg === 'string') toast(msg.startsWith('ok:') ? msg.slice(3) : msg, msg.startsWith('ok:') ? 'good' : 'bad');
+  }
+  // After any player action, re-check objectives immediately (they must complete while paused too).
+  function afterAction() {
+    if (!state.gameOver) GTM.onboardingTick(state);
+    drainNotices();
+    render(true);
   }
 
   document.addEventListener('click', e => {
     const el = e.target.closest('[data-action]');
     if (!el || el.disabled || !actions[el.dataset.action]) return;
     result(actions[el.dataset.action](el.dataset));
-    render(true);
+    afterAction();
   });
   document.addEventListener('change', e => {
     const el = e.target.closest('[data-change]');
     if (!el || !changes[el.dataset.change]) return;
     result(changes[el.dataset.change](el));
     el.blur();
-    render(true);
+    afterAction();
   });
   document.addEventListener('keydown', e => {
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || !state.flags.introDone) return;
     if (e.code === 'Space') { e.preventDefault(); state.paused = !state.paused; render(); }
   });
 
