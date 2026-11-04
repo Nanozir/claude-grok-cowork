@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Goblin Territory Manager</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header id="topbar"></header>
+  <div id="resbar"></div>
+  <div id="layout">
+    <main>
+      <nav id="tabs"></nav>
+      <section id="panel"></section>
+    </main>
+    <aside id="logpane">
+      <div class="loghead">
+        <h2>Event &amp; War Log</h2>
+        <select id="logfilter" data-change="logFilter">
+          <option value="all">All</option>
+          <option value="war">War</option>
+          <option value="bad">Problems</option>
+          <option value="event">Events</option>
+        </select>
+      </div>
+      <div id="log"></div>
+    </aside>
+  </div>
+  <div id="toast"></div>
+  <script src="js/data.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/sim.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
