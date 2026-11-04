@@ -161,7 +161,7 @@ GTM.NAME_SUGGESTIONS = ['Grik', 'Snag', 'Mozzle', 'Rutka', 'Bograt', 'Tinksy', '
 
 // War tuning.
 GTM.WAR = {
-  firstAtDay: 6,          // first war starts at the beginning of this day
+  firstAtDay: 8,          // first war starts at the beginning of this day
   interval: 7,            // days between wars
   basePower: 36,
   growth: 1.55,           // enemy power multiplier per war

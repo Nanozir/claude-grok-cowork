@@ -41,9 +41,9 @@ GTM.makeGoblin = function (state, opts = {}) {
   return g;
 };
 
-GTM.newGame = function (seed) {
+GTM.newGame = function (seed, opts = {}) {
   const s = {
-    version: 1,
+    version: 2,
     seed: seed >>> 0,
     rng: seed >>> 0,
     tick: 0,
@@ -57,7 +57,7 @@ GTM.newGame = function (seed) {
     moraleMods: [],          // { label, amount, ticksLeft }
     victoryMorale: 0,
     griefMorale: 0,
-    resources: { meat: 10, fruit: 25, dried: 0, wood: 15, leather: 2, stone: 5, silk: 0, scrap: 0, ammo: 0, repairKits: 0, crossbows: 0 },
+    resources: { meat: 6, fruit: 18, dried: 0, wood: 15, leather: 2, stone: 5, silk: 0, scrap: 0, ammo: 0, repairKits: 0, crossbows: 0 },
     ledger: {},              // last tick's net change per resource (for rate display)
     zones: {},
     zoneOrder: [],
@@ -80,16 +80,22 @@ GTM.newGame = function (seed) {
     gameOver: null,
     log: [],
     flags: {},
+    tutorial: { guided: false, step: 0, stepStart: 0 },
+    revealed: GTM.makeRevealed(),
+    notices: [],             // { msg, pause } toasts for the UI; drained by main.js
+    autoPause: true,
   };
   for (const id of ['valley', 'forest', 'river', 'spider']) {
     s.zones[id] = GTM.makeZone(id);
     s.zoneOrder.push(id);
   }
   for (const r of GTM.OVERTIME_ROLES) s.overtime[r] = { active: false, ticksLeft: 0, cooldown: 0 };
-  // Starting population: 12 goblins, all gathering fruit in the Valley.
-  for (let i = 0; i < 12; i++) s.goblins.push(GTM.makeGoblin(s, { role: 'laborer', zone: 'valley' }));
+  // Starting population: 12 idle goblins and about 2.5 days of food. The first job is to fix that.
+  for (let i = 0; i < 12; i++) s.goblins.push(GTM.makeGoblin(s));
   GTM.scheduleWar(s, (GTM.WAR.firstAtDay - 1) * GTM.TICKS_PER_DAY); // war starts at 00:00 on that day
-  GTM.log(s, 'system', 'SYSTEM: You are now Lord of this territory. A Territory War begins on day ' + GTM.WAR.firstAtDay + '. Lose, and everyone dies.');
+  GTM.log(s, 'system', 'SYSTEM: You are now Lord. Territory War on Day ' + GTM.WAR.firstAtDay + '. Lose, and everyone dies.');
+  if (opts.guided === false) GTM.revealAll(s);
+  else GTM.startTutorial(s);
   return s;
 };
 
