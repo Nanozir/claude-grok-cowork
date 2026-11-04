@@ -43,7 +43,7 @@ This document combines three research outputs and maps each change to the protot
 
 ### First-session objective script (guided mode)
 
-Each step is one line, with its reason shown greyed under it. The advisor is an original character, *Grik, the only goblin who can count*. The reported manhwa sidekick is unconfirmed, so it isn't used.
+Each step is one line, with its reason shown greyed under it. The advisor is an original character, *Gruk from HR, the only goblin who can count* (the same name the genre report uses). The reported manhwa sidekick is unconfirmed, so it isn't used.
 
 | Step | Goal (one line) | Reason line | Done when | Reveals |
 |---|---|---|---|---|
