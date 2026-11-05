@@ -683,6 +683,28 @@ GTM.enemyEstimate = function (s) {
   };
 };
 
+// War Room readiness checklist (research P1 #1). Pure data so the UI and tests share it.
+GTM.warReadiness = function (s) {
+  const w = s.war;
+  if (!w) return null;
+  const est = GTM.enemyEstimate(s);
+  const target = est.zone;
+  const mil = GTM.healthy(s).filter(g => GTM.ROLES[g.role].military);
+  const posted = target ? mil.filter(g => g.zone === target).length : 0;
+  const wallZone = target || 'valley';
+  const walls = GTM.zoneBuildings(s, wallZone, 'palisade') + GTM.zoneBuildings(s, wallZone, 'reinforced_wall');
+  const traps = GTM.zoneBuildings(s, wallZone, 'pit_traps');
+  const foodDays = GTM.foodTotal(s) / Math.max(1, GTM.dailyFoodNeed(s));
+  const items = [
+    { id: 'scouted', ok: est.zoneKnown, label: 'Scouted the target', detail: target ? s.zones[target].name : 'unknown: put a scout on the enemy' },
+    { id: 'walls', ok: walls + traps > 0, label: 'Walls or traps at ' + (target ? 'the target' : 'the Valley'), detail: walls + ' wall(s), ' + traps + ' trap(s) at ' + s.zones[wallZone].name },
+    { id: 'warriors', ok: !!target && mil.length > 0 && posted === mil.length, label: 'Warriors on the target', detail: target ? posted + '/' + mil.length + ' military posted' : 'target unknown' },
+    { id: 'food', ok: foodDays >= 3, label: '3 days of food', detail: foodDays.toFixed(1) + ' days' },
+  ];
+  const you = target ? GTM.computeDefense(s, target).total : Math.min(...s.zoneOrder.filter(z => s.zones[z].explored).map(z => GTM.computeDefense(s, z).total));
+  return { items, ready: items.every(i => i.ok), you, lo: est.lo, hi: est.hi, known: est.known, target };
+};
+
 GTM.warTick = function (s) {
   const w = s.war;
   if (!w || s.gameOver) return;
@@ -766,3 +788,4 @@ GTM.resolveWar = function (s) {
   GTM.scheduleWar(s, s.tick + GTM.WAR.interval * T());
   GTM.log(s, 'system', 'SYSTEM: Territory War #' + s.war.number + ' begins on day ' + (Math.floor(s.war.atTick / T()) + 1) + '.');
 };
+

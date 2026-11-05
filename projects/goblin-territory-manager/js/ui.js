@@ -390,6 +390,8 @@ GTM.renderWar = function (s) {
   const scale = Math.max(you, est.hi) * 1.1;
   return `<div class="panel-section vs"><div class="row"><b>You ${f1(you)}</b><span class="muted">${target ? 'defending ' + esc(s.zones[target].name) : 'weakest zone (target unknown: scout!)'}</span><b class="bad">Enemy ${est.known ? est.lo + '–' + est.hi : '??'}</b></div>
       <div class="vsbar"><i class="you" style="width:${100 * you / scale}%"></i><i class="enemy" style="left:${100 * est.lo / scale}%;width:${100 * (est.hi - est.lo) / scale}%"></i></div></div>
+    ${(() => { const r = GTM.warReadiness(s); return `<div class="panel-section readiness"><h2>Readiness ${r.ready ? '<span class="good">✓ ready</span>' : '<span class="warn">' + r.items.filter(i => !i.ok).length + ' to fix</span>'}</h2>
+      <ul class="checklist">${r.items.map(i => `<li class="${i.ok ? 'good' : 'bad'}">${i.ok ? '✓' : '✗'} ${esc(i.label)} <span class="muted">${esc(i.detail)}</span></li>`).join('')}</ul></div>`; })()}
     <div class="split"><div>
     <div class="panel-section"><h2>Territory War #${w.number}</h2>
       <p>Starts ${GTM.fmtTime(w.atTick)} (in ${Math.floor(left / 24)}d ${left % 24}h).</p>
@@ -435,3 +437,4 @@ GTM.renderGameOver = (s, checkpoint) => s.gameOver ? `<div class="overlay"><div 
   <p>You survived ${GTM.day(s)} days and won ${s.warsWon} war(s).</p>
   ${checkpoint && checkpoint.seed === s.seed ? `<p>${btn('⟲ Rewind to dawn of Day ' + checkpoint.day, 'rewind', {}, { cls: 'primary big' })}</p><p class="muted">One day to fix your defenses. Check the War Room.</p>` : ''}
   <p>${btn('Start a new territory', 'newGame')} ${btn('Inspect final state', 'closeOverlay')}</p></div></div>` : '';
+

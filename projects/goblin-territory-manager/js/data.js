@@ -164,7 +164,7 @@ GTM.WAR = {
   firstAtDay: 8,          // first war starts at the beginning of this day
   interval: 7,            // days between wars
   basePower: 36,
-  growth: 1.55,           // enemy power multiplier per war
+  growth: 1.40,           // enemy power multiplier per war (was 1.55: war #2 cliff, see GROK-REVIEW.md)
   intelZone: 15,          // intel points to learn the attack zone
   intelPower: 30,         // intel points to learn enemy power within +-10%
   reserveFactor: 0.8,
@@ -172,3 +172,4 @@ GTM.WAR = {
   militiaFactor: 0.25,    // non-military goblins still fight, badly
   ammoPerRanged: 10,
 };
+
