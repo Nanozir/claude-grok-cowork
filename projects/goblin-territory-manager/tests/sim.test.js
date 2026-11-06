@@ -62,6 +62,54 @@ function preparedGame(seed) {
   check('prepared player usually wins war #1', wins >= 7, wins + '/' + N + ' wins');
 }
 
+// 2b. War #2 (GROK-REVIEW cliff): a prepared player who drafts half the captives and keeps
+// trapping the scouted target should usually survive the second war too.
+function playToWar2(s) {
+  const target = s.war.atTick;
+  run(s, target - s.tick + 2, st => {
+    st.goblins.filter(g => g.role === 'idle').forEach((g, i) =>
+      i % 2 === 0 ? GTM.assign(st, g, 'warrior', 'reserve') : GTM.assign(st, g, 'laborer', 'valley'));
+    const est = GTM.enemyEstimate(st);
+    if (est.zoneKnown) for (const g of st.goblins.filter(g => g.role === 'warrior')) g.zone = est.zone;
+    if (st.buildQueue.length === 0) {
+      const z = est.zoneKnown ? est.zone : 'valley';
+      if (GTM.queueBuilding(st, 'pit_traps', z)) GTM.queueBuilding(st, 'palisade', 'valley');
+    }
+  });
+  return s;
+}
+{
+  let war1 = 0, war2 = 0, grows = true;
+  for (let seed = 1; seed <= 10; seed++) {
+    const s = preparedGame(seed);
+    run(s, 2);
+    if (s.gameOver || s.warsWon !== 1) continue;
+    war1++;
+    if (!(s.war.power > 36 * 0.9 * GTM.WAR.growth * 0.95)) grows = false;
+    playToWar2(s);
+    if (!s.gameOver && s.warsWon === 2) war2++;
+  }
+  check('war #2 enemy is stronger than war #1', grows && GTM.WAR.growth > 1);
+  check('prepared player usually wins war #2', war2 >= Math.ceil(war1 * 0.75), war2 + '/' + war1 + ' war #1 survivors');
+}
+
+// 2c. War Room readiness checklist.
+{
+  const s = GTM.newGame(9);
+  let r = GTM.warReadiness(s);
+  check('readiness lists walls/warriors/scouted/food', ['scouted', 'walls', 'warriors', 'food'].every(id => r.items.some(i => i.id === id)));
+  check('fresh territory is not war-ready', !r.ready && !r.items.find(i => i.id === 'scouted').ok);
+  s.intel = GTM.WAR.intelPower;
+  const z = s.war.zone;
+  s.zones[z].buildings.push('palisade', 'pit_traps');
+  GTM.assign(s, s.goblins[0], 'warrior', z); GTM.assign(s, s.goblins[1], 'warrior', z);
+  s.resources.fruit += GTM.dailyFoodNeed(s) * 4;
+  r = GTM.warReadiness(s);
+  check('scouted, walled, posted and fed territory is ready', r.ready && r.target === z && r.known, r.items.filter(i => !i.ok).map(i => i.id).join());
+  GTM.assign(s, s.goblins[2], 'warrior', 'reserve');
+  check('a warrior left in reserve unticks "warriors on target"', !GTM.warReadiness(s).items.find(i => i.id === 'warriors').ok);
+}
+
 // 3. Mechanics sanity.
 {
   const s = GTM.newGame(3);
@@ -141,3 +189,4 @@ function preparedGame(seed) {
 
 console.log(failures ? failures + ' test(s) failed' : 'All tests passed');
 process.exit(failures ? 1 : 0);
+
