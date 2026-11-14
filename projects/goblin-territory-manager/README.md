@@ -28,7 +28,7 @@ Goblins start idle with about 2.5 days of food. One goal at a time is pinned abo
 7. 3 Warriors.
 8. Try Overtime on Builders.
 
-Other surfaces appear when you need them. **Hierarchy** opens with the first promotion or on Day 4, and **R&D** once a Research hut is built. The first war is on **Day 8**. The design and research behind this are in [`research/`](research/onboarding-recommendations.md).
+Other surfaces appear when you need them. **Hierarchy** opens with the first promotion or on Day 4, and **R&D** once a Research hut is built. The first war is on **Day 8**. After you win it, Gruk pins one more goal: draft half the new captives as Warriors, which is what makes war #2 winnable. The design and research behind this are in [`research/`](research/onboarding-recommendations.md).
 
 ## What's implemented
 

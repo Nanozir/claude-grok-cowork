@@ -73,17 +73,21 @@ GTM.renderRes = function (s) {
 GTM.renderTabs = s => GTM.TABS.filter(([id]) => shown(s, 'tabs', id)).map(([id, l]) =>
   `<button data-action="tab" data-v="${id}" class="${GTM.ui.tab === id ? 'on' : ''}">${l}${s.revealed.newTabs.includes(id) ? ' <span class="newtag">NEW</span>' : ''}</button>`).join('');
 
-// Pinned "current goal" card (guided mode only).
+// Pinned "current goal" card (guided first session, then post-war advisor goals).
 GTM.renderObjective = function (s) {
   const o = GTM.currentObjective(s);
   if (!o) return '';
-  const n = GTM.OBJECTIVES.indexOf(o) + 1;
+  const guided = GTM.guidedObjectives();
+  const gi = guided.indexOf(o);
+  const inGuide = gi >= 0;
+  const label = inGuide ? 'GOAL ' + (gi + 1) + '/' + guided.length : 'GOAL';
+  const skip = inGuide ? ' <button data-action="skipTutorial" class="link">skip tutorial</button>' : '';
   return `<div class="objective">
     <img src="research/assets/char-manager-oh.svg" alt="" class="obj-face">
-    <div class="obj-body"><div class="obj-k">GOAL ${n}/${GTM.OBJECTIVES.length}</div>
+    <div class="obj-body"><div class="obj-k">${label}</div>
       <div class="obj-text">${esc(o.text)}</div>
       <div class="obj-why">${esc(GTM.ADVISOR)}: “${esc(o.why)}”</div></div>
-    <div class="obj-actions">${GTM.ui.tab !== o.tab ? btn('Show me', 'showMe', {}, { cls: 'primary' }) : ''} <button data-action="skipTutorial" class="link">skip tutorial</button></div>
+    <div class="obj-actions">${GTM.ui.tab !== o.tab ? btn('Show me', 'showMe', {}, { cls: 'primary' }) : ''}${skip}</div>
   </div>`;
 };
 
