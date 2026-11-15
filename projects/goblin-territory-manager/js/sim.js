@@ -773,7 +773,7 @@ GTM.resolveWar = function (s) {
   const loot = Math.round(w.power * 0.4);
   s.resources.meat += loot; s.resources.wood += loot; s.resources.stone += Math.round(loot / 2); s.resources.scrap += Math.round(loot / 4); s.resources.dried += Math.round(loot / 3);
   const captives = 2 + Math.floor(w.power / 15);
-  for (let i = 0; i < captives; i++) s.goblins.push(GTM.makeGoblin(s, { loy: GTM.randInt(s, 2, 5) }));
+  for (let i = 0; i < captives; i++) s.goblins.push(GTM.makeGoblin(s, { loy: GTM.randInt(s, 2, 5), captive: true }));
   const newZone = GTM.CONQUEST_ORDER.find(id => !s.zones[id]);
   let zoneMsg = '';
   if (newZone) {

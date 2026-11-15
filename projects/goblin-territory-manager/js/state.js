@@ -38,6 +38,7 @@ GTM.makeGoblin = function (state, opts = {}) {
   };
   for (const st of GTM.STATS) g.stats[st] = GTM.randInt(state, lo, hi);
   if (opts.loy) g.stats.loy = opts.loy;
+  if (opts.captive) g.captive = true;
   return g;
 };
 
