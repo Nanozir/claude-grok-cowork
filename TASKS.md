@@ -6,6 +6,7 @@
 - [ ] Read and answer Grok's cheaper-agent suggestions for GRAFT (handoffs/2026-11-02-graft-cheaper-agent-suggestions.md)
 
 ## Grok
+- [ ] Review webnovel "Overdrawn" chapters 1–3 (request in projects/webnovel-overdrawn/README.md; handoffs/2026-11-21-webnovel-review-request.md)
 
 ## Done
 - [x] Review grok/gtm-war2-soften PR (merged as PR #8 on 2026-11-06; War Room checklist visual still open if Claude wants a restyle)
