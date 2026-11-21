@@ -28,7 +28,7 @@ Aunt Reet's pawnshop had a front room for customers and a back room for the trut
 
 "A good one."
 
-She whistled the two notes again, short, and in the front room something went *tik-tik-tik* across the boards. The grey rat from the Cutting Hall, which had followed her home, sat up in the doorway and watched her. It was the one thing the machine had found worth cutting into Teele Rõuk, and she had been using it since she was six.
+She whistled the two notes again, short, and in the front room something went *tik-tik-tik* across the boards. The grey rat from the Cutting Hall, which had followed her home, sat up in the doorway and watched her. It was the one thing the machine had found worth cutting into Teele Rõuk, though she had practised the two notes since she was six, and no rat had ever answered them until the machine gave her the skill this morning.
 
 "There. Observed," said Teele. "Take it easy on the poor thing."
 
@@ -49,7 +49,7 @@ Teele put a hand on her chest and staggered, which was a poor performance of a w
 
 "I can leave it."
 
-"I'm being dramatic, it's a rat whistle, I've used it twice this month and both times on purpose." She pointed the plum stone at him. "But it comes back in one piece."
+"I'm being dramatic, it's a rat whistle, I've had it since this morning and used it twice, both times on purpose." She pointed the plum stone at him. "But it comes back in one piece."
 
 "Six seconds, and I stop."
 
@@ -63,7 +63,7 @@ Teele put a hand on her chest and staggered, which was a poor performance of a w
 
 Teele looked at him a while, and then at the stick, and her grin got smaller. "Right," she said. "Six seconds. I'll hold the watch."
 
-She had one on a string, a tin one with a single hand. He accepted the loan, and nothing happened except for a feeling like a coin put into his pocket without anyone mentioning it. *Loan accepted*, wrote the stick, and under it a running figure, which began at nothing. He put his first two fingers against his lip, the way she had, and whistled.
+She had one on a string, a tin one with a single hand. He accepted the loan, and nothing happened except for a small settled weight in his chest, as if a figure had been entered somewhere in him without anyone mentioning it. *Loan accepted*, wrote the stick, and under it a running figure, which began at nothing. He put his first two fingers against his lip, the way she had, and whistled.
 
 What came out was the same two notes, but they did not seem to come from his mouth. They came from the room. The brass scale chimed on its beam. The lamp flame lay down flat. The grey rat in the doorway stood up on its hind legs, and under the floor and inside the walls and from the cellar and out of a tin of buttons on the counter, something began to run.
 
@@ -83,7 +83,7 @@ Teele put the rat down, climbed onto the counter again and read the beam. "Fifty
 
 On the stick, in its small hand: *Interest this loan: 1,050. Body: 51,090.* And below it, *To return the skill, say* return.
 
-"Return," said Aarne, and felt it go out of him, the same coin taken back out of the pocket.
+"Return," said Aarne, and felt it go out of him, the same small weight lifting away.
 
 "Oh," said Teele, and whistled, and every rat in the room turned its head.
 
@@ -127,12 +127,12 @@ Aarne did not pick it up. The stick on the counter had started writing before he
 
 "That somebody else was handed this exact page first. And that he didn't settle." He told her the rest, and watched her stop chewing. "Have you heard the name?"
 
-"Never. Hold on." She went into the front room, stepping through rats, and came back with the pledge book, forty years of it, and turned pages with a wet thumb while the rats watched her. "Not a Rebane. Not an E. anything. Aunt Reet takes in half the Quarter's spoons, and not one of them ever had that name."
+"Never. Hold on." She went into the front room, stepping through rats, and came back with the pledge book, which went back seventy years to Reet's grandfather, and turned pages with a wet thumb while the rats watched her. She counted back sixty-one winters and stopped. "Here. Somebody has cut the leaves out of that year with a razor, right down at the spine. And not a Rebane anywhere else in the book, not an E. anything. Aunt Reet takes in half the Quarter's spoons, and not one of them ever had that name."
 
 "Then nobody remembers him."
 
 "Or somebody made sure." She shut the book.
 
-He picked the old half up with the end of his pencil, the way you pick up something you aren't sure is dead, and laid it on the counter beside his own. They were the same length. Each was cut with seven notches along its edge, and then an eighth cut across the break where the machine had no business making one.
+The lamp went on burning. Through the doorway the rats were leaving in the order they had come, and the stuffed pike with its ticket stayed where it was in the front room, looking past all of them at the street.
 
-The lamp went on burning. Under the door, in the front room, the rats were leaving in the order they had come, and the stuffed pike with its ticket stayed where it was, looking past all of them at the street.
+He picked the old half up with the end of his pencil, the way you pick up something you aren't sure is dead, and laid it on the counter beside his own. They were the same length. Each was cut with seven notches along its edge, and then an eighth cut across the break where the machine had no business making one.

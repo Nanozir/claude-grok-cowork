@@ -20,7 +20,7 @@ Along the quay the barley women had their pots going, and two of them were talki
 
 "They go out every year."
 
-The Salt Quay was a long stone wall with barges tied along it, and on the far side of the channel the evaporation pans lay flat and white as far as the eye went, with a lookout hut at each corner. Out on the white, a long way off, something was walking. It was the grey-white of the pans themselves and the height of a man, with arms that hung straight and a head but no face Aarne could make out, and it went in a slow line toward the channel. Two guards ran out from the nearest hut with a cart of salt, and then the glare off the pans swallowed it. Nobody else on the quay looked up. That was a rime, Aarne knew from the pamphlet nobody read. A rime was what grew on a salt pan when a debtor died out there still owing, a standing crust the shape of a person that walked home at the first hard frost to collect. The pan guards could usually salt one back down before it reached the lamps, though not every time.
+The Salt Quay was a long stone wall with barges tied along it, and on the far side of the channel the evaporation pans lay flat and white as far as the eye went, with a lookout hut at each corner. Out on the white, a long way off, something was walking. It was the grey-white of the pans themselves and the height of a man, with arms that hung straight and a head but no face Aarne could make out, and it went in a slow line toward the channel. Two guards ran out from the nearest hut with a cart of salt, and then the glare off the pans swallowed it. Nobody else on the quay looked up. That was a rime, Aarne knew from the pamphlet nobody read: the crust of salt that grew into the shape of a debtor who had died out there still owing, and walked home to collect.
 
 Teele climbed on a stack of crates and filled her chest.
 
@@ -38,7 +38,7 @@ Aarne had meant to wait for him to put her down. He saw Nurm's arm go back, and 
 
 "I accept," he said.
 
-The skill came up through his arms like a wave through a rope. He had never lifted anything heavier than a pie crate, and he knew without trying that he could now pick up the barge. Nurm, with a sack on its way to his shoulder and a girl in his other fist, felt his arm go slack.
+The skill came up through his arms like a wave through a rope. He had never lifted anything heavier than a pie crate, and he knew without trying that he could lift far heavier things than he would have believed. Nurm, with a sack on its way to his shoulder and a girl in his other fist, felt his arm go slack.
 
 "What," said Nurm. The sack slid off his shoulder and landed on his own foot.
 
@@ -72,7 +72,7 @@ It took Nurm a long time to get his boot off. When he did, there were sixty-four
 
 The pie cart's dough scale was a small iron one with a pan and a set of weights. By evening Aarne had stopped pretending not to look at it. He read the beam as if the cart might not notice, while Liis slept on a flour sack in the lee of the brazier.
 
-Fifty thousand two hundred and ninety. Two kilos less than at the Cutting. He had eaten four pies since breakfast and could feel every one of the missing grams in his hands, which were cold and had a tremor in the fingers.
+Fifty thousand two hundred and ninety. Two kilos less than at the Cutting. He had eaten four pies since breakfast and the beam had barely moved for them, because the body took back only about a hundred grams a day however much he ate, and he could feel every one of the missing grams in his hands, which were cold and had a tremor in the fingers.
 
 The Reckoner arrived after dark, with a boy carrying a lantern and a leather case. He stopped at the cart and gave Hilja a short bow. "Madam Kallas. I am Reckoner Lind. May I sit?"
 

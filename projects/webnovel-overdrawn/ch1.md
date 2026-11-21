@@ -2,7 +2,7 @@
 
 Teele Rõuk got one cut, the lowest result the machine ever gave anyone, and she cheered as if she had won the harvest lottery.
 
-She stood in the middle of the Cutting Hall with both fists in the air, one of them holding her hazel stick, while Reckoner Lind rang the little bell on his desk for order. The hall was cold and smelled of lamp oil and wet wool, and the sixteen-year-olds still waiting along the wall, a few dozen of them, could not decide whether to laugh. One of them, Aarne Kallas, was next in line and hoped for three cuts, enough for a clerk's desk at the Notchery. Teele put two fingers in her mouth and whistled, two notes, the second lower and rather rude. A grey rat came out from under the registration desk, sat up, and looked at her.
+She stood in the middle of the Cutting Hall, the stone room where the town's sixteen-year-olds came to be measured, with both fists in the air, one of them holding a short rod of hazel wood, while Reckoner Lind rang the little bell on his desk for order. The hall was cold and smelled of lamp oil and wet wool, and the sixteen-year-olds still waiting along the wall, a few dozen of them, could not decide whether to laugh. One of them, Aarne Kallas, was next in line and hoped for three cuts, enough for a clerk's desk at the Notchery, the office that owned the machine. Teele put two fingers in her mouth and whistled, two notes, the second lower and rather rude. A grey rat came out from under the registration desk, sat up, and looked at her.
 
 "There," said Teele. "That's my skill. Nobody conscripts a rat-whistler. They can't even draft me to carry things. Ask anyone."
 
@@ -18,15 +18,15 @@ Every citizen of Orrova came to this hall in the winter they turned sixteen and 
 
 The Notchery could tell you everything about the machine except why it worked. What it did know was who lied about their cuts, because afterwards a clerk split every stick lengthwise with a chisel and filed one half in the cellar, and the two halves had to match. The citizen kept the other half to show landlords and be buried with.
 
-Three cuts would make him a clerk at the Notchery, like his father before he died two winters ago, with a wage, a stove, and a reason for his sister Liis to stay in school past her tenth birthday. For two years the annex had let him copy forms in the evenings to pay off the funeral. He had been weighed already on the iron scale by the door, because the Notchery wrote down everything it could get hold of, and the register said *Kallas, A.: 52,140 grams*, which his mother called thin.
+Three cuts would make him a clerk at the Notchery, like his father before he died two winters ago, with a wage, a stove, and a reason for his sister Liis to stay in school past her tenth birthday. For two years the Notchery's annex had let him copy forms in the evenings to pay off the funeral. He had been weighed already on the iron scale by the door, because the Notchery wrote down everything it could get hold of, and the register said *Kallas, A.: 52,140 grams*, which his mother called thin.
 
-Outside, the bell on the evaporation pans rang twice. That meant a rime had been seen out on the salt flats, one of the crusted salt figures that sometimes walked in off the pans, and nobody in the hall looked up, because the pan bell rang twice most winters.
+Outside, the bell on the evaporation pans rang twice. That meant a rime had been seen out on the salt flats, one of the crusted salt figures that sometimes walked in off the pans, and nobody in the hall raised a head, because the pan bell rang twice most winters.
 
 "Next," said Lind. He was a narrow man with ink down the side of one hand, and he read names as if each one was an invoice. "Kallas, Aarne."
 
 The slot was warm. Aarne pushed the rod in until the wheel behind it took hold, and felt it go on taking: the machine cut, and cut again, past three, four, five, six, and he said out loud, "That's too many, I only wanted three." It went past seven, which was the top of the ladder and the end of the usable rod. Then something cracked, with a long dry sound like a knuckle the size of a barn, and the machine stopped.
 
-The stick came out in his hand, broken lengthwise down the whole of its length. He was holding one half. The other half had gone back into the slot and was not there any more. He waited to feel a skill arrive, the way Teele said hers had, like a coin dropped into a pocket, and nothing arrived. The boy in the leather apron who did the chiselling stood with his chisel raised over a stick that had already been split for him, and looked at Lind, and Lind did not look at him.
+The stick came out in his hand, broken lengthwise down the whole of its length. He was holding one half. The other half had gone back into the slot and was not there any more. He waited to feel a skill arrive, the way Teele said hers had, like a coin dropped into a pocket, and nothing arrived. The boy in the leather apron who did the chiselling stood with his chisel raised over a stick that had already been split for him, and turned to Lind, who kept his eyes on his desk.
 
 "That is a Split," Lind said. He didn't say it loudly. "A stick that breaks by itself, inside the machine, and the machine keeps the other half. There has not been one in sixty-one years."
 
@@ -36,7 +36,7 @@ Somebody at the back screamed. Somebody laughed, and then the whole hall was tal
 
 "That's just friendship with paperwork!"
 
-He looked down, and that was when the stick began to write.
+He glanced down, and that was when the stick began to write.
 
 It happened on the pale flat where it had broken: pencil, grey, a clerk's small upright hand, one line at a time, as if somebody was taking dictation from nobody. It looked like his father's hand, or like the hand every Notchery clerk was taught, which was the same thing until you looked at the tails of the g's.
 
@@ -45,7 +45,7 @@ It happened on the pale flat where it had broken: pencil, grey, a clerk's small 
 > *The price is taken from your body.*
 > *The account must be settled by the end of the seventh day.*
 
-He read it twice, because it was a document you read twice. Then, because the annex had taught him to find the missing piece in any odd paper before reading the rest, he looked for it. A stick that split made one half to keep and one half to file. He had the half to keep. The Notchery had no half to file, because the machine had swallowed it, and somebody, somewhere, held the other half of his stick.
+He read it twice, because it was a document you read twice. Then, because the annex had taught him to find the missing piece in any odd paper before reading the rest, he went hunting for it. A stick that split made one half to keep and one half to file. He had the half to keep. The Notchery had no half to file, because the machine had swallowed it, and somebody, somewhere, held the other half of his stick.
 
 Borrowing a skill sounded like a gift until you asked who had to be asked, and what *taken from the body* was supposed to mean, and why a document that sounded so polite had not put a number on it. He had read enough loan agreements to know that the sentence without a number was the one that cost money.
 
@@ -67,7 +67,7 @@ Aarne sat. Lind did not.
 
 Aarne's mother made about fifteen kroons a month on a good month, selling cabbage-and-egg pies from a cart under the Salt Gate, and had never lodged anything with anybody. "And the stick says the price is taken from my body. What happens to the body if the account fails?"
 
-Lind looked at the numbered drawers. He looked at them for what Aarne would have called a second, and Aarne counted it as more. "The register for the last Split says *forfeit*," he said. "It does not say what was done with it."
+Lind kept his eyes on the numbered drawers for what Aarne would have called a second, and Aarne counted it as more. "The register for the last Split says *forfeit*," he said. "It does not say what was done with it."
 
 "The last Split. Sixty-one years ago."
 
@@ -117,7 +117,7 @@ His mother put a pie on a square of paper. She did it with great care, as if it 
 
 "Can I see it?"
 
-He gave it to her. She read it with her lips moving, got as far as *held Pending*, and looked at him with the grave respect of a nine-year-old who has been told that paper is important. "It's got a number," she said.
+He gave it to her. She read it with her lips moving, got as far as *held Pending*, and regarded him with the grave respect of a nine-year-old who has been told that paper is important. "It's got a number," she said.
 
 "Four-four-one-seven. Don't fold it."
 
