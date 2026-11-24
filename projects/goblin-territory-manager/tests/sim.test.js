@@ -187,6 +187,50 @@ function playToWar2(s) {
   check('first war is on day ' + GTM.WAR.firstAtDay, w.war.atTick === (GTM.WAR.firstAtDay - 1) * 24);
 }
 
+// 6. Post-war #1 Gruk objective: draft half the captives as warriors.
+{
+  const fresh = GTM.newGame(5);
+  check('draft-captives objective is absent during the first session', GTM.currentObjective(fresh).id === 'fruit');
+  GTM.skipTutorial(fresh);
+  check('draft-captives objective is absent after skip, before war #1', GTM.currentObjective(fresh) === null);
+
+  function winWar1() {
+    for (let seed = 1; seed <= 10; seed++) {
+      const g = preparedGame(seed);
+      run(g, 2);
+      if (!g.gameOver && g.warsWon === 1) return g;
+    }
+    return null;
+  }
+
+  const s = winWar1();
+  check('got a war #1 win to test the draft objective', !!s);
+  if (s) {
+    const obj = GTM.currentObjective(s);
+    const captives = GTM.captivesOf(s);
+    const need = GTM.captiveDraftNeed(s);
+    check('draft-captives objective appears after war #1', obj && obj.id === 'draft_captives');
+    check('war #1 yields captives and need is half of them', captives.length >= 2 && need === Math.ceil(captives.length / 2), 'captives ' + captives.length + ' need ' + need);
+    check('not complete before any captive is drafted', obj && !obj.done(s) && GTM.draftedCaptives(s).length === 0);
+
+    GTM.assign(s, captives[0], 'warrior', 'reserve');
+    GTM.onboardingTick(s);
+    check('still open after drafting fewer than half', GTM.currentObjective(s) && GTM.currentObjective(s).id === 'draft_captives');
+
+    for (let i = 1; i < need; i++) GTM.assign(s, captives[i], 'warrior', 'reserve');
+    GTM.onboardingTick(s);
+    check('completes once half the captives are warriors', GTM.currentObjective(s) === null);
+  }
+
+  const t = winWar1();
+  if (t) {
+    const starters = t.goblins.filter(g => !g.captive && g.role !== 'warrior');
+    for (const g of starters.slice(0, 4)) GTM.assign(t, g, 'warrior', 'reserve');
+    GTM.onboardingTick(t);
+    check('drafting non-captives does not complete the objective', GTM.currentObjective(t) && GTM.currentObjective(t).id === 'draft_captives');
+  }
+}
+
 console.log(failures ? failures + ' test(s) failed' : 'All tests passed');
 process.exit(failures ? 1 : 0);
 

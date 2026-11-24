@@ -11,6 +11,12 @@ GTM.TAB_NAMES = { zones: 'Zones', build: 'Construction', population: 'Population
 
 const count = (s, fn) => s.goblins.filter(fn).length;
 
+// War captives are tagged at spawn (see resolveWar). Half of them as warriors
+// is the bar that made war #2 winnable in the 2026-11-05 probe.
+GTM.captivesOf = s => s.goblins.filter(g => g.captive);
+GTM.draftedCaptives = s => s.goblins.filter(g => g.captive && g.role === 'warrior');
+GTM.captiveDraftNeed = s => Math.ceil(GTM.captivesOf(s).length / 2);
+
 // The guided first session. One goal at a time.
 // start: what to reveal when the step becomes current. done(s): completion test. tab: where "Show me" goes.
 GTM.OBJECTIVES = [
@@ -35,7 +41,14 @@ GTM.OBJECTIVES = [
   { id: 'overtime', text: 'Behind schedule? Start Overtime for Builders', why: 'It\'s a growth opportunity. (Morale goes down.)', tab: 'build',
     start: { flags: ['overtime'] },
     done: s => !!s.flags.usedOvertime },
+  // Post-war #1. appear() keeps it off the first-session chain and off the
+  // GOAL n/m count. Completes when at least half the surviving captives are warriors.
+  { id: 'draft_captives', text: 'Draft half the new captives as Warriors', why: 'War #2 doesn\'t care that they just arrived. Put half of them in the line.', tab: 'population',
+    appear: s => s.warsWon >= 1,
+    done: s => GTM.captivesOf(s).length > 0 && GTM.draftedCaptives(s).length >= GTM.captiveDraftNeed(s) },
 ];
+
+GTM.guidedObjectives = () => GTM.OBJECTIVES.filter(o => !o.appear);
 
 GTM.makeRevealed = () => ({ tabs: ['zones'], res: ['food', 'pop'], zones: ['valley'], buildings: [], flags: [], newTabs: [] });
 
@@ -76,10 +89,23 @@ GTM.notify = function (s, msg, pause) {
   s.notices.push({ msg, pause: !!pause });
 };
 
-GTM.currentObjective = s => s.tutorial.guided ? GTM.OBJECTIVES[s.tutorial.step] || null : null;
+// Guided first-session steps only while tutorial.guided. After that, a step
+// with appear() is current only once the predicate is true.
+GTM.currentObjective = function (s) {
+  const o = GTM.OBJECTIVES[s.tutorial.step];
+  if (!o) return null;
+  if (o.appear) return (!s.tutorial.guided && o.appear(s)) ? o : null;
+  return s.tutorial.guided ? o : null;
+};
+
+GTM.advanceToPostObjectives = function (s) {
+  while (s.tutorial.step < GTM.OBJECTIVES.length && !GTM.OBJECTIVES[s.tutorial.step].appear)
+    s.tutorial.step++;
+};
 
 GTM.skipTutorial = function (s) {
   s.tutorial.guided = false;
+  GTM.advanceToPostObjectives(s);
   GTM.revealAll(s);
   GTM.log(s, 'info', 'Tutorial skipped. Full dashboard enabled.');
 };
@@ -91,6 +117,12 @@ GTM.startTutorial = function (s) {
 
 // Called every tick from GTM.tick (and once after player actions, from the UI).
 GTM.onboardingTick = function (s) {
+  // A won war ends the first-session chain so the post-war goal can pin.
+  if (s.tutorial.guided && s.warsWon >= 1) {
+    s.tutorial.guided = false;
+    GTM.advanceToPostObjectives(s);
+  }
+
   // Objectives: allow several to complete at once (e.g. the player did step 2 before step 1).
   let obj;
   while ((obj = GTM.currentObjective(s)) && obj.done(s)) {
@@ -99,12 +131,19 @@ GTM.onboardingTick = function (s) {
     const next = GTM.currentObjective(s);
     GTM.notify(s, '✓ ' + obj.text, false);
     if (next) GTM.applyStart(s, next.start);
-    else {
+    else if (s.tutorial.guided) {
       s.tutorial.guided = false;
       GTM.notify(s, GTM.ADVISOR + ': Onboarding complete. Now survive Day ' + (Math.floor(s.war.atTick / GTM.TICKS_PER_DAY) + 1) + '.', true);
       GTM.log(s, 'good', 'Onboarding complete. The full dashboard unlocks as you need it.');
     }
   }
+
+  obj = GTM.currentObjective(s);
+  if (obj && obj.appear && s.tutorial.posted !== obj.id) {
+    s.tutorial.posted = obj.id;
+    GTM.applyStart(s, obj.start);
+  }
+
   GTM.unlockRules(s);
 };
 
@@ -135,13 +174,22 @@ GTM.unlockRules = function (s) {
 GTM.migrate = function (s) {
   if (s.version === 1) {
     s.version = 2;
-    s.tutorial = { guided: false, step: GTM.OBJECTIVES.length, stepStart: 0 };
+    s.tutorial = { guided: false, step: 0, stepStart: 0 };
     s.revealed = GTM.makeRevealed();
     GTM.revealAll(s);
     s.notices = [];
     s.autoPause = true;
     s.flags = s.flags || {};
     s.flags.introDone = true;
+  }
+  // v2 saves may have skipped or finished the first session with step still
+  // sitting on a guided goal. Slide them to the first post-war goal.
+  if (s.tutorial && !s.tutorial.guided) {
+    GTM.advanceToPostObjectives(s);
+    const o = GTM.OBJECTIVES[s.tutorial.step];
+    // Already past war #1 with no tagged captives: the lesson is gone, don't pin a stuck goal.
+    if (o && o.id === 'draft_captives' && s.warsWon >= 1 && !s.goblins.some(g => g.captive))
+      s.tutorial.step++;
   }
   return s;
 };
